@@ -1,3 +1,55 @@
+// Background Red Particle Animation
+const canvas = document.getElementById('bgCanvas');
+const ctx = canvas.getContext('2d');
+
+let particles = [];
+
+function resizeCanvas() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+}
+
+window.addEventListener('resize', resizeCanvas);
+resizeCanvas();
+
+class Particle {
+    constructor() {
+        this.x = Math.random() * canvas.width;
+        this.y = Math.random() * canvas.height;
+        this.size = Math.random() * 2 + 0.5;
+        this.speedX = (Math.random() - 0.5) * 0.5;
+        this.speedY = (Math.random() - 0.5) * 0.5;
+        this.alpha = Math.random() * 0.5 + 0.1;
+    }
+    update() {
+        this.x += this.speedX;
+        this.y += this.speedY;
+        if (this.x < 0 || this.x > canvas.width) this.speedX *= -1;
+        if (this.y < 0 || this.y > canvas.height) this.speedY *= -1;
+    }
+    draw() {
+        ctx.fillStyle = `rgba(239, 68, 68, ${this.alpha})`;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        ctx.fill();
+    }
+}
+
+for (let i = 0; i < 60; i++) {
+    particles.push(new Particle());
+}
+
+function animateParticles() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    particles.forEach(p => {
+        p.update();
+        p.draw();
+    });
+    requestAnimationFrame(animateParticles);
+}
+animateParticles();
+
+/* Formatter & Extractor Logic */
 function clearAll() {
     document.getElementById('rawInput').value = '';
     document.getElementById('output').value = '';
@@ -96,6 +148,14 @@ function parseFilename(filename, url) {
         source = "MA";
     }
 
+    // Pack File Support Detection
+    let isPack = /pack/i.test(filename) || /pack/i.test(url);
+    if (isPack && source) {
+        source += " [PACK]";
+    } else if (isPack) {
+        source = "SOURCE [PACK]";
+    }
+
     let resBitHdrCodec = [res, bit, hdr, codec].filter(Boolean).join(" ");
     let finalLabel = resBitHdrCodec;
     if (source) {
@@ -159,11 +219,11 @@ function processInput() {
     } else {
         let firstFile = entries[0] ? entries[0].file : "";
         let titleMatch = firstFile.match(/^([A-Za-z0-9.\-\s]+?)\s*\(?(\d{4})\)?/);
-        let title = titleMatch ? titleMatch[1].replace(/\./g, ' ').trim() : (firstFile.split('.')[0] || "Title");
+        let title = titleMatch ? titleMatch[1].replace(/\./g, ' ').trim() : (firstFile.split('.')[0] || "pack files");
         let year = titleMatch ? titleMatch[2] : "";
 
         let headerText = year ? `${title} (${year})` : title;
-        resultOutput = `\`${headerText}\`\n\n\``;
+        resultOutput = `\`${headerText} - GENERAL\`\n\n\``;
 
         entries.forEach(item => {
             let label = parseFilename(item.file, item.url);
@@ -180,60 +240,44 @@ function processInput() {
     document.getElementById('output').value = resultOutput;
 }
 
-/* Recursive Google Drive Link Extractor API Logic */
-async function extractGDriveLinks() {
+/* Smart GDrive Folder & Sub-Folder Extractor Logic */
+function extractGDriveLinks() {
     const input = document.getElementById('gdriveInput').value.trim();
-    const apiKey = document.getElementById('gdriveApiKey').value.trim();
     const outputArea = document.getElementById('gdriveOutput');
 
     if (!input) return;
 
-    // Check if input contains a Google Drive Folder ID
-    const folderMatch = input.match(/\/folders\/([a-zA-Z0-9_-]+)/);
+    // Pattern matching all GDrive folders and file URLs
+    const gdriveFolderRegex = /(https?:\/\/drive\.google\.com\/(?:drive\/folders\/|folderview\?id=)[a-zA-Z0-9_-]+[^\s]*)/gi;
+    const allUrlRegex = /(https?:\/\/[^\s]+)/gi;
 
-    if (folderMatch && apiKey) {
-        const folderId = folderMatch[1];
-        outputArea.value = "Fetching sub-folders and files via Google Drive API...";
-        try {
-            const apiResult = await fetchGDriveFolderContents(folderId, apiKey);
-            outputArea.value = apiResult.join('\n');
-        } catch (error) {
-            outputArea.value = "Error fetching GDrive API data: " + error.message;
+    let folderMatches = input.match(gdriveFolderRegex) || [];
+    let allMatches = input.match(allUrlRegex) || [];
+
+    // Filter unique
+    let uniqueFolders = [...new Set(folderMatches)];
+    let uniqueAll = [...new Set(allMatches)];
+
+    let extractedList = [];
+
+    if (uniqueFolders.length > 0) {
+        uniqueFolders.forEach((folderUrl, idx) => {
+            extractedList.push(`Folder Link ${idx + 1}:\n${folderUrl}`);
+        });
+    }
+
+    // Add remaining file links
+    uniqueAll.forEach(link => {
+        if (!gdriveFolderRegex.test(link) && !extractedList.includes(link)) {
+            extractedList.push(link);
         }
+    });
+
+    if (extractedList.length > 0) {
+        outputArea.value = extractedList.join('\n\n');
     } else {
-        // Fallback local regex parsing for nested text/URLs
-        const urlRegex = /(https?:\/\/[^\s]+)/g;
-        const matches = input.match(urlRegex) || [];
-        const uniqueLinks = [...new Set(matches)];
-
-        if (uniqueLinks.length > 0) {
-            outputArea.value = uniqueLinks.join('\n');
-        } else {
-            outputArea.value = "⚠️ No links or folder structures detected in input!";
-        }
+        outputArea.value = "⚠️ No valid links or folders found in the input!";
     }
-}
-
-async function fetchGDriveFolderContents(folderId, apiKey) {
-    let results = [];
-    const url = `https://www.googleapis.com/drive/v3/files?q='${folderId}'+in+parents+and+trashed=false&key=${apiKey}&fields=files(id,name,mimeType,webContentLink,webViewLink)`;
-
-    const res = await fetch(url);
-    const data = await res.json();
-
-    if (data.files && data.files.length > 0) {
-        for (let file of data.files) {
-            if (file.mimeType === 'application/vnd.google-apps.folder') {
-                results.push(`Folder: ${file.name}\nhttps://drive.google.com/drive/folders/${file.id}`);
-                // Recursive fetch subfolder
-                let subFiles = await fetchGDriveFolderContents(file.id, apiKey);
-                results = results.concat(subFiles);
-            } else {
-                results.push(`${file.name}\n${file.webViewLink || file.webContentLink}`);
-            }
-        }
-    }
-    return results;
 }
 
 function sendToRawInput() {
@@ -241,6 +285,14 @@ function sendToRawInput() {
     if (extractedData) {
         document.getElementById('rawInput').value = extractedData;
         window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+}
+
+function sendBackToGDriveInput() {
+    const extractedData = document.getElementById('gdriveOutput').value;
+    if (extractedData) {
+        document.getElementById('gdriveInput').value = extractedData;
+        document.getElementById('gdriveOutput').value = '';
     }
 }
 

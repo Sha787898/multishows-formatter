@@ -1,10 +1,8 @@
-document.getElementById('formatBtn').addEventListener('click', processInput);
-document.getElementById('clearBtn').addEventListener('click', clearAll);
-document.getElementById('copyBtn').addEventListener('click', copyOutput);
-
 function clearAll() {
     document.getElementById('rawInput').value = '';
     document.getElementById('output').textContent = '';
+    document.getElementById('findInput').value = '';
+    document.getElementById('replaceInput').value = '';
     document.getElementById('warningBox').style.display = 'none';
 }
 
@@ -12,8 +10,24 @@ function copyOutput() {
     const text = document.getElementById('output').textContent;
     if (text) {
         navigator.clipboard.writeText(text);
-        alert('কপি করা হয়েছে!');
+        alert('Copied to clipboard!');
     }
+}
+
+function applyReplace() {
+    const findText = document.getElementById('findInput').value;
+    const replaceText = document.getElementById('replaceInput').value;
+    const outputDiv = document.getElementById('output');
+
+    if (!findText) return;
+
+    let currentContent = outputDiv.textContent;
+    const regex = new RegExp(escapeRegExp(findText), 'g');
+    outputDiv.textContent = currentContent.replace(regex, replaceText);
+}
+
+function escapeRegExp(string) {
+    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
 function extractSize(text) {
@@ -28,6 +42,7 @@ function parseFilename(filename, url) {
         return `Multi Server • MultiShows${sizeStr}`;
     }
 
+    // Resolution & Bit
     let res = "";
     if (/2160p|4K|UHD/i.test(filename)) res = "2160p";
     else if (/1080p/i.test(filename)) res = "1080p";
@@ -35,19 +50,7 @@ function parseFilename(filename, url) {
 
     let bit = /10bit/i.test(filename) ? "10bit" : "";
 
-    let hdr = "";
-    if (/DV|DoVi|HDR-DV/i.test(filename)) {
-        hdr = "DoVi HDR";
-        if (/HDR10\+/i.test(filename)) hdr = "DoVi HDR10+";
-        else if (/HDR10/i.test(filename)) hdr = "DoVi HDR10";
-    } else if (/HDR10\+/i.test(filename)) {
-        hdr = "HDR10+";
-    } else if (/HDR/i.test(filename)) {
-        hdr = "HDR";
-    } else if (res === "2160p" && /SDR/i.test(filename)) {
-        hdr = "SDR";
-    }
-
+    // Codec
     let codec = "";
     if (/AV1/i.test(filename)) {
         codec = "AV1";
@@ -61,6 +64,22 @@ function parseFilename(filename, url) {
         codec = "AVC (H.264)";
     }
 
+    // HDR / DoVi / SDR
+    let hdr = "";
+    if (/DV|DoVi|HDR-DV/i.test(filename)) {
+        hdr = "DoVi HDR";
+        if (/HDR10\+/i.test(filename)) hdr = "DoVi HDR10+";
+        else if (/HDR10/i.test(filename)) hdr = "DoVi HDR10";
+    } else if (/HDR10\+/i.test(filename)) {
+        hdr = "HDR10+";
+    } else if (/HDR/i.test(filename)) {
+        hdr = "HDR";
+    } else if (res === "2160p" || /SDR/i.test(filename)) {
+        // Fix: Force SDR for 2160p when no HDR/DV is present
+        hdr = "SDR";
+    }
+
+    // Source Tag
     let source = "";
     if (/REMUX/i.test(filename)) {
         source = /UHD/i.test(filename) ? "BluRay • REMUX UHD" : "BluRay • REMUX";
@@ -179,7 +198,7 @@ function processInput() {
     }
 
     if (entries.length === 0) {
-        warningBox.innerHTML = "⚠️ কোনো সঠিক URL পাওয়া যায়নি! অনুগ্রহ করে ইনপুট চেক করুন।";
+        warningBox.innerHTML = "⚠️ Sachi URL mali nathi! Input tpaso.";
         warningBox.style.display = 'block';
     }
 

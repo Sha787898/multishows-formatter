@@ -7,8 +7,8 @@
 body {
     background-color: #0b0f19;
     background-image: 
-        radial-gradient(at 0% 0%, rgba(30, 58, 138, 0.2) 0px, transparent 50%),
-        radial-gradient(at 100% 100%, rgba(88, 28, 135, 0.2) 0px, transparent 50%);
+        radial-gradient(at 0% 0%, rgba(30, 58, 138, 0.25) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(88, 28, 135, 0.25) 0px, transparent 50%);
     color: #f3f4f6;
     font-family: 'Inter', sans-serif;
     min-height: 100vh;
@@ -25,13 +25,14 @@ header {
     margin-bottom: 25px;
 }
 
-header h1 {
+.glow-text {
     font-size: 2.2rem;
     font-weight: 700;
     background: linear-gradient(135deg, #60a5fa 0%, #a78bfa 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     letter-spacing: -0.5px;
+    text-shadow: 0 0 20px rgba(96, 165, 250, 0.2);
 }
 
 header p {
@@ -53,14 +54,21 @@ header p {
 }
 
 .card {
-    background: rgba(17, 24, 39, 0.8);
-    backdrop-filter: blur(12px);
+    background: rgba(17, 24, 39, 0.75);
+    backdrop-filter: blur(16px);
     border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 16px;
     padding: 20px;
     box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
     display: flex;
     flex-direction: column;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.animated-card:hover {
+    border-color: rgba(96, 165, 250, 0.3);
+    box-shadow: 0 12px 35px -10px rgba(37, 99, 235, 0.25);
+    transform: translateY(-2px);
 }
 
 .card-header {
@@ -77,6 +85,12 @@ header p {
     display: flex;
     align-items: center;
     gap: 8px;
+}
+
+.section-desc {
+    color: #9ca3af;
+    font-size: 0.85rem;
+    margin-bottom: 10px;
 }
 
 /* Search and Replace Box */
@@ -106,12 +120,12 @@ header p {
 
 .search-replace-bar input:focus {
     border-color: #60a5fa;
-    box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.2);
+    box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.2);
 }
 
 textarea {
     width: 100%;
-    height: 480px;
+    height: 440px;
     background: rgba(11, 15, 25, 0.9);
     border: 1px solid #1f2937;
     color: #93c5fd;
@@ -122,31 +136,29 @@ textarea {
     font-size: 0.85rem;
     line-height: 1.5;
     outline: none;
-    transition: border-color 0.2s;
+    transition: border-color 0.2s, box-shadow 0.2s;
 }
 
 textarea:focus {
     border-color: #3b82f6;
+    box-shadow: 0 0 10px rgba(59, 130, 246, 0.2);
 }
 
 #output {
-    width: 100%;
-    height: 480px;
-    background: rgba(11, 15, 25, 0.9);
-    border: 1px solid #1f2937;
     color: #f3f4f6;
-    font-family: 'Fira Code', monospace;
-    padding: 14px;
-    border-radius: 10px;
-    white-space: pre-wrap;
-    word-break: break-all;
-    overflow-y: auto;
-    font-size: 0.85rem;
-    line-height: 1.5;
+}
+
+.gdrive-section {
+    margin-top: 25px;
+}
+
+.gdrive-section textarea {
+    height: 150px;
 }
 
 .btn-group {
     margin-top: 14px;
+    margin-bottom: 10px;
     display: flex;
     gap: 10px;
 }
@@ -158,7 +170,7 @@ button {
     cursor: pointer;
     font-weight: 600;
     font-size: 0.88rem;
-    transition: all 0.2s ease;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -172,8 +184,8 @@ button {
 }
 
 .btn-primary:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 6px 16px rgba(37, 99, 235, 0.4);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(37, 99, 235, 0.5);
 }
 
 .btn-danger {
@@ -183,19 +195,21 @@ button {
 }
 
 .btn-danger:hover {
-    background: rgba(239, 68, 68, 0.25);
+    background: rgba(239, 68, 68, 0.3);
+    transform: translateY(-2px);
 }
 
 .btn-action {
-    background: rgba(59, 130, 246, 0.15);
-    color: #93c5fd;
-    border: 1px solid rgba(59, 130, 246, 0.3);
-    padding: 8px 12px;
-    font-size: 0.8rem;
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    color: #ffffff;
+    padding: 8px 14px;
+    font-size: 0.82rem;
+    border-radius: 6px;
 }
 
 .btn-action:hover {
-    background: rgba(59, 130, 246, 0.3);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
 }
 
 .btn-copy {
@@ -208,8 +222,8 @@ button {
 }
 
 .btn-copy:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 6px 16px rgba(5, 150, 105, 0.4);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(5, 150, 105, 0.5);
 }
 
 .warning {

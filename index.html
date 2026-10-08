@@ -3,29 +3,47 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MultiShows Link Formatter Advanced</title>
+    <title>MultiShows Advanced Link Formatter</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
 <div class="container">
-    <h1>MultiShows Automated Link Formatter</h1>
+    <header>
+        <h1>MultiShows Automated Link Formatter</h1>
+        <p>Smart Telegram Link Formatting & Codec Parsing Tool</p>
+    </header>
 
     <div class="grid">
+        <!-- Input Card -->
         <div class="card">
-            <h2>Raw Input (ফাইল নেম এবং লিঙ্ক পেস্ট করুন)</h2>
-            <textarea id="rawInput" placeholder="এখানে কাঁচা লিঙ্ক ও ফাইল নেম পেস্ট করুন..."></textarea>
+            <div class="card-header">
+                <span class="card-title">📝 Raw Input Data</span>
+            </div>
+            <textarea id="rawInput" placeholder="Raw links and filenames paste karo..."></textarea>
             <div class="btn-group">
-                <button id="formatBtn">FORMAT LINKS</button>
-                <button id="clearBtn" class="clear">CLEAR</button>
+                <button class="btn-primary" onclick="processInput()">⚡ FORMAT LINKS</button>
+                <button class="btn-danger" onclick="clearAll()">🗑️ CLEAR</button>
             </div>
             <div id="warningBox" class="warning"></div>
         </div>
 
+        <!-- Output Card -->
         <div class="card">
-            <h2>Telegram Formatted Output</h2>
+            <div class="card-header">
+                <span class="card-title">🚀 Telegram Formatted Output</span>
+            </div>
+
+            <!-- Search and Replace Section -->
+            <div class="search-replace-bar">
+                <input type="text" id="findInput" placeholder="Find text...">
+                <input type="text" id="replaceInput" placeholder="Replace with...">
+                <button class="btn-action" onclick="applyReplace()">Replace All</button>
+            </div>
+
             <div id="output"></div>
-            <button id="copyBtn" class="copy">COPY OUTPUT</button>
+            <button class="btn-copy" onclick="copyOutput()">📋 COPY OUTPUT</button>
         </div>
     </div>
 </div>

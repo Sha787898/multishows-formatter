@@ -1,15 +1,14 @@
 <!DOCTYPE html>
-<html lang="bn">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MultiShows • Link Formatter & GDrive Extractor</title>
+    <title>MultiShows • Crimson Elite Link Engine</title>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<!-- Animated Live Particle Background -->
 <canvas id="bgCanvas"></canvas>
 
 <div class="container">
@@ -26,9 +25,9 @@
                 <span class="card-title"><span class="icon">📝</span> Raw Input Data</span>
                 <span class="status-dot"></span>
             </div>
-            <textarea id="rawInput" placeholder="Paste raw filenames and links here..."></textarea>
+            <textarea id="rawInput" placeholder="Paste raw filenames, sizes [e.g. 1.85 GB] and links here..."></textarea>
             <div class="btn-group">
-                <button class="btn-primary pulse-btn" onclick="processInput()">⚡ FORMAT LINKS</button>
+                <button class="btn-primary" onclick="processInput()">⚡ FORMAT LINKS</button>
                 <button class="btn-danger" onclick="clearAll()">🗑️ CLEAR</button>
             </div>
             <div id="warningBox" class="warning"></div>
@@ -42,7 +41,7 @@
 
             <!-- Search and Replace Section -->
             <div class="search-replace-bar">
-                <input type="text" id="findInput" placeholder="Find text (e.g. 2160p HEVC)...">
+                <input type="text" id="findInput" placeholder="Find text...">
                 <input type="text" id="replaceInput" placeholder="Replace with...">
                 <button class="btn-action" onclick="applyReplace()">Replace All</button>
             </div>
@@ -52,23 +51,22 @@
         </div>
     </div>
 
-    <!-- Compact Google Drive Extractor Section -->
+    <!-- Google Drive Extractor Section -->
     <div class="card animated-card gdrive-section">
         <div class="card-header">
             <span class="card-title"><span class="icon">📁</span> Google Drive Link Extractor (Compact)</span>
         </div>
-        <div class="gdrive-grid">
-            <div class="gdrive-input-box">
-                <textarea id="gdriveInput" placeholder="Paste GDrive Folder or file URLs..."></textarea>
-                <div class="btn-group compact-btn-group">
-                    <button class="btn-primary btn-sm" onclick="extractGDriveLinks()">🔍 EXTRACT</button>
-                    <button class="btn-action-send btn-sm" onclick="sendToRawInput()">⬆️ SEND TO RAW</button>
-                    <button class="btn-danger btn-sm" onclick="clearGDrive()">🗑️ CLEAR</button>
-                </div>
-            </div>
-            <div class="gdrive-output-box">
-                <textarea id="gdriveOutput" readonly placeholder="Extracted links appear here..."></textarea>
-            </div>
+        <p class="section-desc">Paste Google Drive Folder link or raw links to extract inner nested sub-folders and file links:</p>
+        
+        <div class="grid-gdrive">
+            <textarea id="gdriveInput" placeholder="https://drive.google.com/drive/folders/..."></textarea>
+            <textarea id="gdriveOutput" readonly placeholder="Extracted links will appear here..."></textarea>
+        </div>
+        
+        <div class="btn-group">
+            <button class="btn-primary" onclick="extractGDriveLinks()">🔍 EXTRACT</button>
+            <button class="btn-action-send" onclick="sendToRawInput()">⬆️ SEND TO RAW</button>
+            <button class="btn-danger" onclick="clearGDrive()">🗑️ CLEAR</button>
         </div>
     </div>
 </div>

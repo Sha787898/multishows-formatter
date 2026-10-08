@@ -10,11 +10,10 @@ function copyOutput() {
     const text = document.getElementById('output').value;
     if (text) {
         navigator.clipboard.writeText(text);
-        alert('কপি করা হয়েছে!');
+        alert('Copied to clipboard successfully!');
     }
 }
 
-// Fixed Search and Replace logic for Textarea Output
 function applyReplace() {
     const findText = document.getElementById('findInput').value;
     const replaceText = document.getElementById('replaceInput').value;
@@ -174,29 +173,74 @@ function processInput() {
     }
 
     if (entries.length === 0) {
-        warningBox.innerHTML = "⚠️ কোনো সঠিক URL পাওয়া যায়নি!";
+        warningBox.innerHTML = "⚠️ No valid URLs found! Check your input syntax.";
         warningBox.style.display = 'block';
     }
 
     document.getElementById('output').value = resultOutput;
 }
 
-/* GDrive Link Extractor Functions */
-function extractGDriveLinks() {
-    const input = document.getElementById('gdriveInput').value;
+/* Recursive Google Drive Link Extractor API Logic */
+async function extractGDriveLinks() {
+    const input = document.getElementById('gdriveInput').value.trim();
+    const apiKey = document.getElementById('gdriveApiKey').value.trim();
+    const outputArea = document.getElementById('gdriveOutput');
+
     if (!input) return;
 
-    // Regex to match URLs
-    const urlRegex = /(https?:\/\/[^\s]+)/g;
-    const matches = input.match(urlRegex) || [];
-    
-    // Unique URLs
-    const uniqueLinks = [...new Set(matches)];
+    // Check if input contains a Google Drive Folder ID
+    const folderMatch = input.match(/\/folders\/([a-zA-Z0-9_-]+)/);
 
-    if (uniqueLinks.length > 0) {
-        document.getElementById('gdriveOutput').value = uniqueLinks.join('\n');
+    if (folderMatch && apiKey) {
+        const folderId = folderMatch[1];
+        outputArea.value = "Fetching sub-folders and files via Google Drive API...";
+        try {
+            const apiResult = await fetchGDriveFolderContents(folderId, apiKey);
+            outputArea.value = apiResult.join('\n');
+        } catch (error) {
+            outputArea.value = "Error fetching GDrive API data: " + error.message;
+        }
     } else {
-        document.getElementById('gdriveOutput').value = "⚠️ কোনো লিঙ্ক খুঁজে পাওয়া যায়নি!";
+        // Fallback local regex parsing for nested text/URLs
+        const urlRegex = /(https?:\/\/[^\s]+)/g;
+        const matches = input.match(urlRegex) || [];
+        const uniqueLinks = [...new Set(matches)];
+
+        if (uniqueLinks.length > 0) {
+            outputArea.value = uniqueLinks.join('\n');
+        } else {
+            outputArea.value = "⚠️ No links or folder structures detected in input!";
+        }
+    }
+}
+
+async function fetchGDriveFolderContents(folderId, apiKey) {
+    let results = [];
+    const url = `https://www.googleapis.com/drive/v3/files?q='${folderId}'+in+parents+and+trashed=false&key=${apiKey}&fields=files(id,name,mimeType,webContentLink,webViewLink)`;
+
+    const res = await fetch(url);
+    const data = await res.json();
+
+    if (data.files && data.files.length > 0) {
+        for (let file of data.files) {
+            if (file.mimeType === 'application/vnd.google-apps.folder') {
+                results.push(`Folder: ${file.name}\nhttps://drive.google.com/drive/folders/${file.id}`);
+                // Recursive fetch subfolder
+                let subFiles = await fetchGDriveFolderContents(file.id, apiKey);
+                results = results.concat(subFiles);
+            } else {
+                results.push(`${file.name}\n${file.webViewLink || file.webContentLink}`);
+            }
+        }
+    }
+    return results;
+}
+
+function sendToRawInput() {
+    const extractedData = document.getElementById('gdriveOutput').value;
+    if (extractedData) {
+        document.getElementById('rawInput').value = extractedData;
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 }
 

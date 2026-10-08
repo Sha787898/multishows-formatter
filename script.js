@@ -242,7 +242,7 @@ function processInput() {
 
     } else {
         let mainTitle = entries.length > 0 ? cleanTitle(entries[0].file) : "pack files";
-        resultOutput = `\`${mainTitle} -GENERAL\`\n\n\``;
+        resultOutput = `\`${mainTitle} \`\n\n\``;
 
         entries.forEach(item => {
             let label = parseFilename(item.file, item.url, totalAvcSizeGB);

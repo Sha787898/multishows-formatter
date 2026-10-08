@@ -154,14 +154,61 @@ function parseFilename(filename, url, totalAvcPackSizeGB = 0) {
     else if (/HDR/i.test(filename)) hdr = "HDR";
     else if (res === "2160p" || /SDR/i.test(filename)) hdr = "SDR";
 
-    // Source Tag Detection
+    // Comprehensive OTT & Source Tag Detection
     let source = "";
-    if (/REMUX/i.test(filename)) source = "BluRay • REMUX";
-    else if (/BluRay/i.test(filename)) source = "BluRay";
-    else if (/NF/i.test(filename)) source = "NF";
-    else if (/ZEE5/i.test(filename)) source = "ZEE5";
-    else if (/DSNP|Hotstar/i.test(filename)) source = "DSNP";
-    else source = "AMZN";
+    if (/REMUX/i.test(filename)) {
+        source = "BluRay • REMUX";
+    } else if (/BluRay|BDRip|BRRip/i.test(filename)) {
+        source = "BluRay";
+    } else if (/(?:\b|\.)CR(?:UNCHYROLL)?(?:\b|\.)/i.test(filename)) {
+        source = "CR";
+    } else if (/(?:\b|\.)SONY(?:LIV)?(?:\b|\.)/i.test(filename)) {
+        source = "SONY";
+    } else if (/(?:\b|\.)iT(?:UNES)?(?:\b|\.)/i.test(filename)) {
+        source = "iT";
+    } else if (/(?:\b|\.)IQIYI|\bIQ\b/i.test(filename)) {
+        source = "iQIYI";
+    } else if (/(?:\b|\.)BILI(?:BILIBILI)?(?:\b|\.)/i.test(filename)) {
+        source = "BILI";
+    } else if (/(?:\b|\.)ZEE5(?:\b|\.)/i.test(filename)) {
+        source = "ZEE5";
+    } else if (/(?:\b|\.)NF|NETFLIX(?:\b|\.)/i.test(filename)) {
+        source = "NF";
+    } else if (/(?:\b|\.)AMZN|AMAZON(?:\b|\.)/i.test(filename)) {
+        source = "AMZN";
+    } else if (/(?:\b|\.)DSNP|DISNEY|HOTSTAR|\bHS\b(?:\b|\.)/i.test(filename)) {
+        source = "DSNP";
+    } else if (/(?:\b|\.)ATVP|APPLE(?:\b|\.)/i.test(filename)) {
+        source = "ATVP";
+    } else if (/(?:\b|\.)MAX|HBOMAX|HBO(?:\b|\.)/i.test(filename)) {
+        source = "MAX";
+    } else if (/(?:\b|\.)HULU(?:\b|\.)/i.test(filename)) {
+        source = "HULU";
+    } else if (/(?:\b|\.)VOOT(?:\b|\.)/i.test(filename)) {
+        source = "VOOT";
+    } else if (/(?:\b|\.)JIO(?:CINEMA)?(?:\b|\.)/i.test(filename)) {
+        source = "JIO";
+    } else if (/(?:\b|\.)AHA(?:\b|\.)/i.test(filename)) {
+        source = "AHA";
+    } else if (/(?:\b|\.)PMTP|PARAMOUNT(?:\b|\.)/i.test(filename)) {
+        source = "PMTP";
+    } else if (/(?:\b|\.)PCOK|PEACOCK(?:\b|\.)/i.test(filename)) {
+        source = "PCOK";
+    } else if (/(?:\b|\.)STAN(?:\b|\.)/i.test(filename)) {
+        source = "STAN";
+    } else if (/(?:\b|\.)TVER(?:\b|\.)/i.test(filename)) {
+        source = "TVER";
+    } else if (/(?:\b|\.)HOICHOI(?:\b|\.)/i.test(filename)) {
+        source = "HOICHOI";
+    } else if (/(?:\b|\.)KLICK(?:\b|\.)/i.test(filename)) {
+        source = "KLICK";
+    } else if (/(?:\b|\.)U-?NEXT(?:\b|\.)/i.test(filename)) {
+        source = "U-NEXT";
+    } else if (/(?:\b|\.)MA(?:\b|\.)/i.test(filename) && !/DTS/i.test(filename)) {
+        source = "MA";
+    } else {
+        source = "AMZN";
+    }
 
     let resBitHdrCodec = [res, bit, hdr, codec].filter(Boolean).join(" ");
 
@@ -172,7 +219,7 @@ function parseFilename(filename, url, totalAvcPackSizeGB = 0) {
         return `${resBitHdrCodec} • ${source}${packSize} [PACK]`.replace(/\s+/g, ' ').trim();
     }
 
-    // Normal Download Links - Forced sizeStr addition
+    // Normal Download Links
     let finalLabel = resBitHdrCodec ? `${resBitHdrCodec} • ${source}` : source;
     return `${finalLabel}${sizeStr}`.replace(/\s+/g, ' ').trim();
 }
@@ -242,7 +289,7 @@ function processInput() {
 
     } else {
         let mainTitle = entries.length > 0 ? cleanTitle(entries[0].file) : "pack files";
-        resultOutput = `\`${mainTitle} \`\n\n\``;
+        resultOutput = `\`${mainTitle} -GENERAL\`\n\n\``;
 
         entries.forEach(item => {
             let label = parseFilename(item.file, item.url, totalAvcSizeGB);

@@ -1,0 +1,145 @@
+:root {
+    --bg-color: #0d0f17;
+    --card-bg: #161b26;
+    --accent-color: #00f0ff;
+    --accent-purple: #7000ff;
+    --text-color: #e0e6ed;
+    --mono-bg: #090b10;
+    --border-color: #232d3f;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: 'Rajdhani', sans-serif;
+}
+
+body {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    min-height: 100vh;
+    padding: 2rem;
+    display: flex;
+    justify-content: center;
+}
+
+.container {
+    max-width: 1200px;
+    width: 100%;
+}
+
+header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.glow-text {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 2.8rem;
+    color: var(--accent-color);
+    text-shadow: 0 0 15px rgba(0, 240, 255, 0.5);
+    letter-spacing: 3px;
+}
+
+.subtitle {
+    font-size: 1rem;
+    color: var(--accent-purple);
+    letter-spacing: 2px;
+    font-weight: 700;
+}
+
+.grid-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+}
+
+@media (max-width: 768px) {
+    .grid-container {
+        grid-template-columns: 1fr;
+    }
+}
+
+.card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+    display: flex;
+    flex-direction: column;
+}
+
+.card h2 {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.2rem;
+    margin-bottom: 1rem;
+    color: var(--accent-color);
+}
+
+textarea {
+    width: 100%;
+    height: 350px;
+    background-color: var(--mono-bg);
+    border: 1px solid var(--border-color);
+    color: #00ffaa;
+    padding: 1rem;
+    border-radius: 8px;
+    font-family: monospace;
+    font-size: 0.9rem;
+    resize: vertical;
+    outline: none;
+}
+
+textarea:focus {
+    border-color: var(--accent-color);
+}
+
+.output-box {
+    width: 100%;
+    height: 350px;
+    background-color: var(--mono-bg);
+    border: 1px solid var(--border-color);
+    color: #fff;
+    padding: 1rem;
+    border-radius: 8px;
+    font-family: monospace;
+    font-size: 0.85rem;
+    overflow-y: auto;
+    white-space: pre-wrap;
+}
+
+.btn-group {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.cyber-btn {
+    background: linear-gradient(45deg, var(--accent-purple), var(--accent-color));
+    border: none;
+    color: white;
+    padding: 0.8rem 1.5rem;
+    font-family: 'Orbitron', sans-serif;
+    font-weight: 700;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-top: 1rem;
+    width: 100%;
+}
+
+.cyber-btn:hover {
+    opacity: 0.9;
+    transform: translateY(-2px);
+    box-shadow: 0 0 15px rgba(0, 240, 255, 0.4);
+}
+
+.cyber-btn.secondary {
+    background: #333;
+}
+
+.cyber-btn.success {
+    background: linear-gradient(45deg, #00b09b, #96c93d);
+}

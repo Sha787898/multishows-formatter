@@ -1,4 +1,4 @@
-// Smooth Subtle Background Particles
+// Smooth Subtle Background Particles Animation
 const canvas = document.getElementById('bgCanvas');
 const ctx = canvas.getContext('2d');
 let particles = [];
@@ -75,7 +75,7 @@ function escapeRegExp(string) {
     return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
-// Extract size string e.g. [1.85 GB]
+// Extract size string e.g. [1.85 GB] or [692.65 MB]
 function extractSize(text) {
     const match = text.match(/[\[\(](\d+(?:\.\d+)?\s*(?:GB\vert{}MB))[\]\)]/i);
     return match ? ` [${match[1].toUpperCase()}]` : '';
@@ -90,22 +90,23 @@ function parseSizeToGB(text) {
     return unit === 'MB' ? val / 1024 : val;
 }
 
-function parseFilename(filename, url) {
+function parseFilename(filename, url, totalPackSizeGB = 0) {
     const sizeStr = extractSize(filename);
 
+    // Embedded / Shortened Links
     if (url.includes('short.azonahub') || url.includes('filesforever') || url.includes('embed')) {
         return `Multi Server • MultiShows${sizeStr}`;
     }
 
-    // Resolution
+    // Resolution Detection (Default to 1080p if not specified)
     let res = "";
     if (/2160p|4K|UHD/i.test(filename)) res = "2160p";
-    else if (/1080p/i.test(filename)) res = "1080p";
     else if (/720p/i.test(filename)) res = "720p";
+    else res = "1080p";
 
     let bit = /10bit/i.test(filename) ? "10bit" : "";
 
-    // Codec
+    // Codec Detection
     let codec = "";
     if (/AV1/i.test(filename)) {
         codec = "AV1";
@@ -115,33 +116,33 @@ function parseFilename(filename, url) {
         codec = "HEVC (H.265)";
     } else if (/x264/i.test(filename)) {
         codec = "AVC (x264)";
-    } else if (/H\.?264|AVC/i.test(filename)) {
-        codec = "AVC (H.264)";
     } else {
-        codec = "AVC (H.264)"; // Default fallback to AVC if missing
+        codec = "AVC (H.264)"; // Default fallback to AVC (H.264)
     }
 
-    // HDR/SDR
+    // HDR/SDR Detection
     let hdr = "";
     if (/DV|DoVi|HDR-DV/i.test(filename)) hdr = "DoVi HDR";
     else if (/HDR10\+/i.test(filename)) hdr = "HDR10+";
     else if (/HDR/i.test(filename)) hdr = "HDR";
     else if (res === "2160p" || /SDR/i.test(filename)) hdr = "SDR";
 
-    // Source Tag
+    // Source Tag Detection
     let source = "";
     if (/REMUX/i.test(filename)) source = "BluRay • REMUX";
     else if (/BluRay/i.test(filename)) source = "BluRay";
-    else if (/AMZN/i.test(filename)) source = "AMZN";
     else if (/NF/i.test(filename)) source = "NF";
     else if (/ZEE5/i.test(filename)) source = "ZEE5";
     else if (/DSNP|Hotstar/i.test(filename)) source = "DSNP";
     else source = "AMZN";
 
-    // Pack Checking
+    // Pack File Formatting Fix
     let isPack = /pack/i.test(filename) || /pack/i.test(url);
     if (isPack) {
-        source = `${source} [PACK]`;
+        let totalSizeFormatted = totalPackSizeGB > 0 ? ` [${totalPackSizeGB.toFixed(2)} GB]` : sizeStr;
+        let packSource = `${source}${totalSizeFormatted} [PACK]`;
+        let resBitHdrCodec = [res, bit, hdr, codec].filter(Boolean).join(" ");
+        return `${resBitHdrCodec} • ${packSource}`.replace(/\s+/g, ' ').trim();
     }
 
     let resBitHdrCodec = [res, bit, hdr, codec].filter(Boolean).join(" ");
@@ -173,12 +174,10 @@ function processInput() {
     let isEpisodeSeries = entries.some(e => /S\d{2}E\d{2}/i.test(e.file));
     let resultOutput = "";
 
-    // Total size calculation for AVC files
+    // Total size calculation for AVC / Pack Files
     let totalAvcSizeGB = 0;
     entries.forEach(item => {
-        if (/AVC|H\.?264|x264/i.test(item.file) || !(/HEVC|H\.?265|x265|AV1/i.test(item.file))) {
-            totalAvcSizeGB += parseSizeToGB(item.file);
-        }
+        totalAvcSizeGB += parseSizeToGB(item.file);
     });
 
     if (isEpisodeSeries) {
@@ -199,7 +198,7 @@ function processInput() {
 
             let block = `\`${showTitle} -${epKey}\`\n\n\``;
             items.forEach(it => {
-                let label = parseFilename(it.file, it.url);
+                let label = parseFilename(it.file, it.url, totalAvcSizeGB);
                 block += `${it.url} "${label}"\n`;
             });
             block = block.trim() + '`';
@@ -211,11 +210,10 @@ function processInput() {
         let firstFile = entries[0] ? entries[0].file : "";
         let title = firstFile.split('.')[0] || "pack files";
 
-        let totalSizeNotice = totalAvcSizeGB > 0 ? ` [Total AVC: ${totalAvcSizeGB.toFixed(2)} GB]` : '';
-        resultOutput = `\`pack files - GENERAL${totalSizeNotice}\`\n\n\``;
+        resultOutput = `\`pack files - GENERAL\`\n\n\``;
 
         entries.forEach(item => {
-            let label = parseFilename(item.file, item.url);
+            let label = parseFilename(item.file, item.url, totalAvcSizeGB);
             resultOutput += `${item.url} "${label}"\n`;
         });
         resultOutput = resultOutput.trim() + '`';
@@ -229,7 +227,7 @@ function processInput() {
     document.getElementById('output').value = resultOutput;
 }
 
-/* Google Drive Link Separator */
+/* Google Drive Link Extractor */
 function extractGDriveLinks() {
     const input = document.getElementById('gdriveInput').value.trim();
     const outputArea = document.getElementById('gdriveOutput');

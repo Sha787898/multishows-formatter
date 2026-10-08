@@ -78,7 +78,7 @@ function escapeRegExp(string) {
 // Extract size string e.g. [6.78 GB] or [16.37 GB]
 function extractSize(text) {
     if (!text) return '';
-    const match = text.match(/\[(\d+(?:\.\d+)?\s*(?:GB\vert{}MB))\]/i) || text.match(/(\d+(?:\.\d+)?\s*(?:GB|MB))/i);
+    const match = text.match(/\[?(\d+(?:\.\d+)?\s*(?:GB\vert{}MB))\]?/i);
     return match ? ` [${match[1].toUpperCase()}]` : '';
 }
 
@@ -90,6 +90,26 @@ function parseSizeToGB(text) {
     let val = parseFloat(match[1]);
     let unit = match[2].toUpperCase();
     return unit === 'MB' ? val / 1024 : val;
+}
+
+// Extract Movie / Show Title Cleanly
+function cleanTitle(filename) {
+    if (!filename) return "pack files";
+    
+    // Clean string up to Year e.g., Mandaadi.2026.1080p -> Mandaadi
+    let yearMatch = filename.split(/[\s\.\_\-](?:19|20)\d{2}/i)[0];
+    if (yearMatch && yearMatch !== filename) {
+        return yearMatch.replace(/[\.\_]/g, ' ').trim();
+    }
+    
+    // Clean string up to Season Tag e.g., Carrie.S01E08 -> Carrie
+    let seasonMatch = filename.split(/S\d{2}/i)[0];
+    if (seasonMatch && seasonMatch !== filename) {
+        return seasonMatch.replace(/[\.\_]/g, ' ').trim();
+    }
+
+    // Fallback: take first word before first dot or space
+    return filename.split(/[\.\s\_]/)[0].trim();
 }
 
 function parseFilename(filename, url, totalAvcPackSizeGB = 0) {
@@ -198,7 +218,7 @@ function processInput() {
         for (let epKey in epGroups) {
             let items = epGroups[epKey];
             let firstFile = items[0].file;
-            let showTitle = firstFile.replace(/\./g, ' ').split(/S\d{2}E\d{2}/i)[0].trim();
+            let showTitle = cleanTitle(firstFile);
 
             let block = `\`${showTitle} -${epKey}\`\n\n\``;
             items.forEach(it => {
@@ -211,7 +231,8 @@ function processInput() {
         resultOutput = epOutputs.join('\n\n---\n\n');
 
     } else {
-        resultOutput = `\`pack files -GENERAL\`\n\n\``;
+        let mainTitle = entries.length > 0 ? cleanTitle(entries[0].file) : "pack files";
+        resultOutput = `\`${mainTitle} -GENERAL\`\n\n\``;
 
         entries.forEach(item => {
             let label = parseFilename(item.file, item.url, totalAvcSizeGB);

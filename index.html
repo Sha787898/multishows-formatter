@@ -1,27 +1,32 @@
 <!DOCTYPE html>
-<html lang="bn">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MultiShows Advanced Link Formatter Pro</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <title>MultiShows • Enterprise Link Parser & Extractor Pro</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
+<div class="glow-bg-1"></div>
+<div class="glow-bg-2"></div>
+
 <div class="container">
     <header>
+        <div class="badge">PRO VERSION 4.0</div>
         <h1 class="glow-text">MultiShows Automated Link Formatter</h1>
-        <p>Smart Telegram Link Formatting, Codec Parsing & GDrive Link Extractor</p>
+        <p>Advanced Media Link Formatting, Codec Parsing & Recursive GDrive Extractor</p>
     </header>
 
     <div class="grid">
         <!-- Input Card -->
         <div class="card animated-card">
             <div class="card-header">
-                <span class="card-title">📝 Raw Input Data</span>
+                <span class="card-title"><span class="icon">📝</span> Raw Input Data</span>
+                <span class="status-dot"></span>
             </div>
-            <textarea id="rawInput" placeholder="এখানে কাঁচা লিঙ্ক ও ফাইল নেম পেস্ট করুন..."></textarea>
+            <textarea id="rawInput" placeholder="Paste raw filenames and links here..."></textarea>
             <div class="btn-group">
                 <button class="btn-primary pulse-btn" onclick="processInput()">⚡ FORMAT LINKS</button>
                 <button class="btn-danger" onclick="clearAll()">🗑️ CLEAR</button>
@@ -32,7 +37,7 @@
         <!-- Output Card -->
         <div class="card animated-card">
             <div class="card-header">
-                <span class="card-title">🚀 Telegram Formatted Output</span>
+                <span class="card-title"><span class="icon">🚀</span> Telegram Formatted Output</span>
             </div>
 
             <!-- Search and Replace Section -->
@@ -42,23 +47,29 @@
                 <button class="btn-action" onclick="applyReplace()">Replace All</button>
             </div>
 
-            <textarea id="output" readonly placeholder="এখানে ফরম্যাট হওয়া রেজাল্ট দেখাবে..."></textarea>
+            <textarea id="output" readonly placeholder="Formatted output will appear here..."></textarea>
             <button class="btn-copy pulse-btn-green" onclick="copyOutput()">📋 COPY OUTPUT</button>
         </div>
     </div>
 
-    <!-- Google Drive Folder Link Extractor Section -->
+    <!-- Advanced Google Drive Extractor Section -->
     <div class="card animated-card gdrive-section">
         <div class="card-header">
-            <span class="card-title">📁 Google Drive / Folder Link Extractor</span>
+            <span class="card-title"><span class="icon">📁</span> Google Drive Recursive Link Extractor</span>
+            <div class="api-key-wrapper">
+                <input type="password" id="gdriveApiKey" placeholder="GDrive API Key (Optional for API Extractor)">
+            </div>
         </div>
-        <p class="section-desc">গুগল ড্রাইভ বা টেক্সটের ভিতর থাকা ফোল্ডার লিংক ও সাব-লিংকগুলোকে আলাদা করতে পেস্ট করুন:</p>
-        <textarea id="gdriveInput" placeholder="Google Drive folder link বা ফাইল সম্বলিত টেক্সট পেস্ট করুন..."></textarea>
+        <p class="section-desc">Paste Google Drive Folder link or raw links below to extract inner nested sub-folders and file links:</p>
+        <textarea id="gdriveInput" placeholder="Paste GDrive Folder URL or raw folder texts here..."></textarea>
+        
         <div class="btn-group">
-            <button class="btn-primary" onclick="extractGDriveLinks()">🔍 EXTRACT ALL LINKS</button>
-            <button class="btn-danger" onclick="clearGDrive()">🗑️ CLEAR GDRIVE</button>
+            <button class="btn-primary" onclick="extractGDriveLinks()">🔍 EXTRACT LINKS / SUB-FOLDERS</button>
+            <button class="btn-action-send" onclick="sendToRawInput()">⬆️ SEND TO RAW INPUT</button>
+            <button class="btn-danger" onclick="clearGDrive()">🗑️ CLEAR</button>
         </div>
-        <textarea id="gdriveOutput" readonly placeholder="আলাদা করা লিঙ্কসমূহ এখানে এক্সপোর্ট হবে..."></textarea>
+        
+        <textarea id="gdriveOutput" readonly placeholder="Extracted sub-folders or direct file links will be exported here..."></textarea>
     </div>
 </div>
 

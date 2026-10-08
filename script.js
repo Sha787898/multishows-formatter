@@ -150,10 +150,12 @@ function parseFilename(filename, url) {
 
     // Pack File Support Detection
     let isPack = /pack/i.test(filename) || /pack/i.test(url);
-    if (isPack && source) {
-        source += " [PACK]";
-    } else if (isPack) {
-        source = "SOURCE [PACK]";
+    if (isPack) {
+        if (source) {
+            source += " [PACK]";
+        } else {
+            source = "SOURCE [PACK]";
+        }
     }
 
     let resBitHdrCodec = [res, bit, hdr, codec].filter(Boolean).join(" ");

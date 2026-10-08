@@ -78,7 +78,7 @@ function escapeRegExp(string) {
 // Fixed Extract size string e.g. [20.09 GB] or [10.91 GB]
 function extractSize(text) {
     if (!text) return '';
-    const match = text.match(/\[?(\d+(?:\.\d+)?\s*(?:GB\vert{}MB))\]?/i);
+    const match = text.match(/\[?\s*(\d+(?:\.\d+)?\s*(?:GB\vert{}MB))\s*\]?/i);
     return match ? ` [${match[1].toUpperCase()}]` : '';
 }
 
@@ -92,23 +92,29 @@ function parseSizeToGB(text) {
     return unit === 'MB' ? val / 1024 : val;
 }
 
-// Extract Movie / Show Title Cleanly
+// Clean Title & Auto-append Year e.g., Insidious (2026)
 function cleanTitle(filename) {
     if (!filename) return "pack files";
-    
-    // Clean string up to Year e.g., The.Butchers.Blade.2026 -> The Butchers Blade
-    let yearMatch = filename.split(/[\s\.\_\-](?:19|20)\d{2}/i)[0];
-    if (yearMatch && yearMatch !== filename) {
-        return yearMatch.replace(/[\.\_]/g, ' ').trim();
-    }
-    
-    // Clean string up to Season Tag e.g., Show.Name.S01E08 -> Show Name
-    let seasonMatch = filename.split(/S\d{2}/i)[0];
-    if (seasonMatch && seasonMatch !== filename) {
-        return seasonMatch.replace(/[\.\_]/g, ' ').trim();
+
+    const yearMatch = filename.match(/(?:19|20)\d{2}/);
+    let yearStr = yearMatch ? ` (${yearMatch[0]})` : "";
+
+    let titlePart = filename;
+    if (yearMatch) {
+        titlePart = filename.split(/(?:19|20)\d{2}/i)[0];
+    } else {
+        titlePart = filename.split(/S\d{2}/i)[0];
     }
 
-    return filename.split(/[\.\s\_]/)[0].trim();
+    let cleanName = titlePart
+        .split(/AKA/i)[0]
+        .replace(/[\.\_]/g, ' ')
+        .replace(/[\-\(\)\[\]]+$/, '')
+        .trim();
+
+    if (!cleanName) cleanName = "Movie";
+
+    return `${cleanName}${yearStr}`;
 }
 
 function parseFilename(filename, url, totalAvcPackSizeGB = 0) {
@@ -181,10 +187,15 @@ function processInput() {
     const lines = raw.split('\n').map(l => l.trim()).filter(l => l);
     let entries = [];
     let currentText = "";
+    let lastFileText = "";
 
     for (let line of lines) {
-        if (line.startsWith('http')) {
-            entries.push({ file: currentText, url: line });
+        if (line.startsWith('http://') || line.startsWith('https://')) {
+            let fileToUse = currentText || lastFileText;
+            entries.push({ file: fileToUse, url: line });
+            if (currentText) {
+                lastFileText = currentText;
+            }
             currentText = "";
         } else {
             currentText = currentText ? currentText + " " + line : line;

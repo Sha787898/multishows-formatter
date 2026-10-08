@@ -75,10 +75,10 @@ function escapeRegExp(string) {
     return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
-// Extract Size accurately from multi-line text
+// Extract size string e.g. [6.78 GB] or [16.37 GB]
 function extractSize(text) {
     if (!text) return '';
-    const match = text.match(/\[?(\d+(?:\.\d+)?\s*(?:GB\vert{}MB))\]?/i);
+    const match = text.match(/\[(\d+(?:\.\d+)?\s*(?:GB\vert{}MB))\]/i) || text.match(/(\d+(?:\.\d+)?\s*(?:GB|MB))/i);
     return match ? ` [${match[1].toUpperCase()}]` : '';
 }
 
@@ -92,20 +92,10 @@ function parseSizeToGB(text) {
     return unit === 'MB' ? val / 1024 : val;
 }
 
-// Extract Title cleanly (handles Mandaadi.2026.1080p... -> Mandaadi)
-function cleanTitle(filename) {
-    if (!filename) return "Shows";
-    let title = filename.split(/[\s\.\_\-](?:19|20)\d{2}/i)[0]; // Split before year e.g., 2026
-    if (!title || title === filename) {
-        title = filename.split(/S\d{2}/i)[0]; // Split before S01
-    }
-    return title.replace(/[\.\_]/g, ' ').trim();
-}
-
 function parseFilename(filename, url, totalAvcPackSizeGB = 0) {
     const sizeStr = extractSize(filename);
 
-    // Shortened / Multi Server Links
+    // Embedded / Shortened Links
     if (url.includes('short.azonahub') || url.includes('filesforever') || url.includes('embed')) {
         return `Multi Server • MultiShows${sizeStr}`;
     }
@@ -139,7 +129,7 @@ function parseFilename(filename, url, totalAvcPackSizeGB = 0) {
     else if (/HDR/i.test(filename)) hdr = "HDR";
     else if (res === "2160p" || /SDR/i.test(filename)) hdr = "SDR";
 
-    // Source Tag
+    // Source Tag Detection
     let source = "";
     if (/REMUX/i.test(filename)) source = "BluRay • REMUX";
     else if (/BluRay/i.test(filename)) source = "BluRay";
@@ -157,7 +147,7 @@ function parseFilename(filename, url, totalAvcPackSizeGB = 0) {
         return `${resBitHdrCodec} • ${source}${packSize} [PACK]`.replace(/\s+/g, ' ').trim();
     }
 
-    // Normal Download Links - ALWAYS Add File Size
+    // Normal Download Links - Forced sizeStr addition
     let finalLabel = resBitHdrCodec ? `${resBitHdrCodec} • ${source}` : source;
     return `${finalLabel}${sizeStr}`.replace(/\s+/g, ' ').trim();
 }
@@ -169,15 +159,16 @@ function processInput() {
 
     if (!raw) return;
 
-    // Parse Input by URL boundaries
-    const rawBlocks = raw.split(/(https?:\/\/[^\s]+)/gi);
+    const lines = raw.split('\n').map(l => l.trim()).filter(l => l);
     let entries = [];
+    let currentText = "";
 
-    for (let i = 0; i < rawBlocks.length - 1; i += 2) {
-        let fileText = rawBlocks[i].replace(/\n/g, ' ').trim();
-        let url = rawBlocks[i + 1].trim();
-        if (url) {
-            entries.push({ file: fileText, url: url });
+    for (let line of lines) {
+        if (line.startsWith('http')) {
+            entries.push({ file: currentText, url: line });
+            currentText = "";
+        } else {
+            currentText = currentText ? currentText + " " + line : line;
         }
     }
 
@@ -206,9 +197,10 @@ function processInput() {
         let epOutputs = [];
         for (let epKey in epGroups) {
             let items = epGroups[epKey];
-            let title = cleanTitle(items[0].file);
+            let firstFile = items[0].file;
+            let showTitle = firstFile.replace(/\./g, ' ').split(/S\d{2}E\d{2}/i)[0].trim();
 
-            let block = `\`${title} -${epKey}\`\n\n\``;
+            let block = `\`${showTitle} -${epKey}\`\n\n\``;
             items.forEach(it => {
                 let label = parseFilename(it.file, it.url, totalAvcSizeGB);
                 block += `${it.url} "${label}"\n`;
@@ -219,8 +211,7 @@ function processInput() {
         resultOutput = epOutputs.join('\n\n---\n\n');
 
     } else {
-        let mainTitle = entries.length > 0 ? cleanTitle(entries[0].file) : "pack files";
-        resultOutput = `\`${mainTitle} -GENERAL\`\n\n\``;
+        resultOutput = `\`pack files -GENERAL\`\n\n\``;
 
         entries.forEach(item => {
             let label = parseFilename(item.file, item.url, totalAvcSizeGB);
@@ -235,4 +226,49 @@ function processInput() {
     }
 
     document.getElementById('output').value = resultOutput;
+}
+
+/* Google Drive Link Extractor */
+function extractGDriveLinks() {
+    const input = document.getElementById('gdriveInput').value.trim();
+    const outputArea = document.getElementById('gdriveOutput');
+
+    if (!input) return;
+
+    const gdriveFolderRegex = /(https?:\/\/drive\.google\.com\/(?:drive\/folders\/|folderview\?id=)[a-zA-Z0-9_-]+[^\s]*)/gi;
+    const allUrlRegex = /(https?:\/\/[^\s]+)/gi;
+
+    let folderMatches = input.match(gdriveFolderRegex) || [];
+    let allMatches = input.match(allUrlRegex) || [];
+
+    let uniqueFolders = [...new Set(folderMatches)];
+    let uniqueAll = [...new Set(allMatches)];
+
+    let result = [];
+    if (uniqueFolders.length > 0) {
+        uniqueFolders.forEach((folder, idx) => {
+            result.push(`Folder Link ${idx + 1}:\n${folder}`);
+        });
+    }
+
+    uniqueAll.forEach(link => {
+        if (!gdriveFolderRegex.test(link) && !result.includes(link)) {
+            result.push(link);
+        }
+    });
+
+    outputArea.value = result.length ? result.join('\n\n') : "⚠️ No Google Drive links found!";
+}
+
+function sendToRawInput() {
+    const data = document.getElementById('gdriveOutput').value;
+    if (data) {
+        document.getElementById('rawInput').value = data;
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+}
+
+function clearGDrive() {
+    document.getElementById('gdriveInput').value = '';
+    document.getElementById('gdriveOutput').value = '';
 }

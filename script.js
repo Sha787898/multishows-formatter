@@ -75,7 +75,7 @@ function escapeRegExp(string) {
     return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
-// Extract size string e.g. [1.85 GB] or [692.65 MB] from individual string
+// Extract size string e.g. [1.85 GB] or [692.65 MB] from individual text
 function extractSize(text) {
     const match = text.match(/[\[\(](\d+(?:\.\d+)?\s*(?:GB\vert{}MB))[\]\)]/i);
     return match ? ` [${match[1].toUpperCase()}]` : '';
@@ -136,16 +136,16 @@ function parseFilename(filename, url, totalAvcPackSizeGB = 0) {
     else if (/DSNP|Hotstar/i.test(filename)) source = "DSNP";
     else source = "AMZN";
 
-    // PACK File Logic (Only sum of AVC Files)
+    let resBitHdrCodec = [res, bit, hdr, codec].filter(Boolean).join(" ");
+
+    // PACK File Specific Formatting
     let isPack = /pack/i.test(filename) || /pack/i.test(url);
     if (isPack) {
         let packSize = totalAvcPackSizeGB > 0 ? ` [${totalAvcPackSizeGB.toFixed(2)} GB]` : sizeStr;
-        let resBitHdrCodec = [res, bit, hdr, codec].filter(Boolean).join(" ");
         return `${resBitHdrCodec} • ${source}${packSize} [PACK]`.replace(/\s+/g, ' ').trim();
     }
 
-    // Normal Files (Uses its own file size)
-    let resBitHdrCodec = [res, bit, hdr, codec].filter(Boolean).join(" ");
+    // Normal Files Formatting (Includes individual size string)
     let finalLabel = resBitHdrCodec ? `${resBitHdrCodec} • ${source}` : source;
 
     return `${finalLabel}${sizeStr}`.replace(/\s+/g, ' ').trim();
@@ -171,10 +171,10 @@ function processInput() {
         }
     }
 
-    // Calculate sum of ONLY AVC / H.264 / x264 files
+    // Calculate sum of ONLY AVC / H.264 / x264 files for the Pack link
     let totalAvcSizeGB = 0;
     entries.forEach(item => {
-        const isAvc = /AV1|HEVC|x265|H\.?265/i.test(item.file) === false; // If not HEVC/AV1 then it's AVC
+        const isAvc = !/AV1|HEVC|x265|H\.?265/i.test(item.file); // If not HEVC/AV1, count as AVC
         if (isAvc) {
             totalAvcSizeGB += parseSizeToGB(item.file);
         }

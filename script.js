@@ -75,7 +75,7 @@ function escapeRegExp(string) {
     return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
-// Extract size string e.g. [1.85 GB] or [692.65 MB] from individual text
+// Extract size string e.g. [1.85 GB] or [692.65 MB]
 function extractSize(text) {
     const match = text.match(/[\[\(](\d+(?:\.\d+)?\s*(?:GB\vert{}MB))[\]\)]/i);
     return match ? ` [${match[1].toUpperCase()}]` : '';
@@ -93,7 +93,7 @@ function parseSizeToGB(text) {
 function parseFilename(filename, url, totalAvcPackSizeGB = 0) {
     const sizeStr = extractSize(filename);
 
-    // Embedded / Shortened Links
+    // Embedded / Shortened Links Fixed: Now appends size string properly
     if (url.includes('short.azonahub') || url.includes('filesforever') || url.includes('embed')) {
         return `Multi Server • MultiShows${sizeStr}`;
     }
@@ -138,14 +138,14 @@ function parseFilename(filename, url, totalAvcPackSizeGB = 0) {
 
     let resBitHdrCodec = [res, bit, hdr, codec].filter(Boolean).join(" ");
 
-    // PACK File Specific Formatting
+    // PACK File Specific Formatting (Sum of AVC files)
     let isPack = /pack/i.test(filename) || /pack/i.test(url);
     if (isPack) {
         let packSize = totalAvcPackSizeGB > 0 ? ` [${totalAvcPackSizeGB.toFixed(2)} GB]` : sizeStr;
         return `${resBitHdrCodec} • ${source}${packSize} [PACK]`.replace(/\s+/g, ' ').trim();
     }
 
-    // Normal Files Formatting (Includes individual size string)
+    // Normal Download Links Formatting (Explicitly appending sizeStr)
     let finalLabel = resBitHdrCodec ? `${resBitHdrCodec} • ${source}` : source;
 
     return `${finalLabel}${sizeStr}`.replace(/\s+/g, ' ').trim();
@@ -171,10 +171,10 @@ function processInput() {
         }
     }
 
-    // Calculate sum of ONLY AVC / H.264 / x264 files for the Pack link
+    // Sum size of ONLY AVC / H.264 files for Pack tag
     let totalAvcSizeGB = 0;
     entries.forEach(item => {
-        const isAvc = !/AV1|HEVC|x265|H\.?265/i.test(item.file); // If not HEVC/AV1, count as AVC
+        const isAvc = !/AV1|HEVC|x265|H\.?265/i.test(item.file);
         if (isAvc) {
             totalAvcSizeGB += parseSizeToGB(item.file);
         }

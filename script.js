@@ -75,11 +75,11 @@ function escapeRegExp(string) {
     return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
-// Fixed Extract size string e.g. [20.09 GB] or [10.91 GB]
+// Rock-solid File Size Extraction Logic
 function extractSize(text) {
     if (!text) return '';
-    const match = text.match(/\[?\s*(\d+(?:\.\d+)?\s*(?:GB\vert{}MB))\s*\]?/i);
-    return match ? ` [${match[1].toUpperCase()}]` : '';
+    const match = text.match(/(\d+(?:\.\d+)?)\s*(GB|MB)/i);
+    return match ? ` [${match[1]} ${match[2].toUpperCase()}]` : '';
 }
 
 // Helper to calculate numerical value in GB
@@ -92,7 +92,7 @@ function parseSizeToGB(text) {
     return unit === 'MB' ? val / 1024 : val;
 }
 
-// Clean Title & Auto-append Year e.g., Insidious (2026)
+// Clean Title & Auto-append Year e.g., Insidious - Out of the Further (2026)
 function cleanTitle(filename) {
     if (!filename) return "pack files";
 

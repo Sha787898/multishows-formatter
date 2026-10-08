@@ -75,7 +75,7 @@ function escapeRegExp(string) {
     return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
-// Extract size string e.g. [1.85 GB] or [692.65 MB]
+// Extract size string e.g. [1.85 GB] or [692.65 MB] from individual string
 function extractSize(text) {
     const match = text.match(/[\[\(](\d+(?:\.\d+)?\s*(?:GB\vert{}MB))[\]\)]/i);
     return match ? ` [${match[1].toUpperCase()}]` : '';
@@ -90,7 +90,7 @@ function parseSizeToGB(text) {
     return unit === 'MB' ? val / 1024 : val;
 }
 
-function parseFilename(filename, url, totalPackSizeGB = 0) {
+function parseFilename(filename, url, totalAvcPackSizeGB = 0) {
     const sizeStr = extractSize(filename);
 
     // Embedded / Shortened Links
@@ -117,7 +117,7 @@ function parseFilename(filename, url, totalPackSizeGB = 0) {
     } else if (/x264/i.test(filename)) {
         codec = "AVC (x264)";
     } else {
-        codec = "AVC (H.264)"; // Default fallback to AVC (H.264)
+        codec = "AVC (H.264)"; // Default fallback
     }
 
     // HDR/SDR Detection
@@ -136,15 +136,15 @@ function parseFilename(filename, url, totalPackSizeGB = 0) {
     else if (/DSNP|Hotstar/i.test(filename)) source = "DSNP";
     else source = "AMZN";
 
-    // Pack File Formatting Fix
+    // PACK File Logic (Only sum of AVC Files)
     let isPack = /pack/i.test(filename) || /pack/i.test(url);
     if (isPack) {
-        let totalSizeFormatted = totalPackSizeGB > 0 ? ` [${totalPackSizeGB.toFixed(2)} GB]` : sizeStr;
-        let packSource = `${source}${totalSizeFormatted} [PACK]`;
+        let packSize = totalAvcPackSizeGB > 0 ? ` [${totalAvcPackSizeGB.toFixed(2)} GB]` : sizeStr;
         let resBitHdrCodec = [res, bit, hdr, codec].filter(Boolean).join(" ");
-        return `${resBitHdrCodec} • ${packSource}`.replace(/\s+/g, ' ').trim();
+        return `${resBitHdrCodec} • ${source}${packSize} [PACK]`.replace(/\s+/g, ' ').trim();
     }
 
+    // Normal Files (Uses its own file size)
     let resBitHdrCodec = [res, bit, hdr, codec].filter(Boolean).join(" ");
     let finalLabel = resBitHdrCodec ? `${resBitHdrCodec} • ${source}` : source;
 
@@ -171,14 +171,17 @@ function processInput() {
         }
     }
 
-    let isEpisodeSeries = entries.some(e => /S\d{2}E\d{2}/i.test(e.file));
-    let resultOutput = "";
-
-    // Total size calculation for AVC / Pack Files
+    // Calculate sum of ONLY AVC / H.264 / x264 files
     let totalAvcSizeGB = 0;
     entries.forEach(item => {
-        totalAvcSizeGB += parseSizeToGB(item.file);
+        const isAvc = /AV1|HEVC|x265|H\.?265/i.test(item.file) === false; // If not HEVC/AV1 then it's AVC
+        if (isAvc) {
+            totalAvcSizeGB += parseSizeToGB(item.file);
+        }
     });
+
+    let isEpisodeSeries = entries.some(e => /S\d{2}E\d{2}/i.test(e.file));
+    let resultOutput = "";
 
     if (isEpisodeSeries) {
         let epGroups = {};
@@ -210,7 +213,7 @@ function processInput() {
         let firstFile = entries[0] ? entries[0].file : "";
         let title = firstFile.split('.')[0] || "pack files";
 
-        resultOutput = `\`pack files - GENERAL\`\n\n\``;
+        resultOutput = `\`pack files -GENERAL\`\n\n\``;
 
         entries.forEach(item => {
             let label = parseFilename(item.file, item.url, totalAvcSizeGB);

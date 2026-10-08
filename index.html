@@ -3,20 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MultiShows • Enterprise Link Parser & Extractor Pro</title>
+    <title>MultiShows • Crimson Elite Link Engine</title>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<div class="glow-bg-1"></div>
-<div class="glow-bg-2"></div>
+<canvas id="bgCanvas"></canvas>
 
 <div class="container">
     <header>
-        <div class="badge">PRO VERSION 4.0</div>
+        <div class="badge">PRO VERSION 5.0 • CRIMSON EDITION</div>
         <h1 class="glow-text">MultiShows Automated Link Formatter</h1>
-        <p>Advanced Media Link Formatting, Codec Parsing & Recursive GDrive Extractor</p>
+        <p>Ultra-Fast Media Link Parser, Codec Extractor & Nested GDrive Inspector</p>
     </header>
 
     <div class="grid">
@@ -48,7 +47,7 @@
             </div>
 
             <textarea id="output" readonly placeholder="Formatted output will appear here..."></textarea>
-            <button class="btn-copy pulse-btn-green" onclick="copyOutput()">📋 COPY OUTPUT</button>
+            <button class="btn-copy" onclick="copyOutput()">📋 COPY OUTPUT</button>
         </div>
     </div>
 
@@ -56,20 +55,18 @@
     <div class="card animated-card gdrive-section">
         <div class="card-header">
             <span class="card-title"><span class="icon">📁</span> Google Drive Recursive Link Extractor</span>
-            <div class="api-key-wrapper">
-                <input type="password" id="gdriveApiKey" placeholder="GDrive API Key (Optional for API Extractor)">
-            </div>
         </div>
-        <p class="section-desc">Paste Google Drive Folder link or raw links below to extract inner nested sub-folders and file links:</p>
-        <textarea id="gdriveInput" placeholder="Paste GDrive Folder URL or raw folder texts here..."></textarea>
+        <p class="section-desc">Paste GDrive Folder/Sub-folder or Raw links to extract inner nested structures:</p>
+        <textarea id="gdriveInput" placeholder="Paste GDrive Folder link or nested URLs here..."></textarea>
         
         <div class="btn-group">
             <button class="btn-primary" onclick="extractGDriveLinks()">🔍 EXTRACT LINKS / SUB-FOLDERS</button>
             <button class="btn-action-send" onclick="sendToRawInput()">⬆️ SEND TO RAW INPUT</button>
+            <button class="btn-action-loop" onclick="sendBackToGDriveInput()">🔄 SEND TO GDRIVE INPUT</button>
             <button class="btn-danger" onclick="clearGDrive()">🗑️ CLEAR</button>
         </div>
         
-        <textarea id="gdriveOutput" readonly placeholder="Extracted sub-folders or direct file links will be exported here..."></textarea>
+        <textarea id="gdriveOutput" readonly placeholder="Extracted sub-folders or direct file links will appear here..."></textarea>
     </div>
 </div>
 

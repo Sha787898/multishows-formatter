@@ -1,29 +1,30 @@
 function clearAll() {
     document.getElementById('rawInput').value = '';
-    document.getElementById('output').textContent = '';
+    document.getElementById('output').value = '';
     document.getElementById('findInput').value = '';
     document.getElementById('replaceInput').value = '';
     document.getElementById('warningBox').style.display = 'none';
 }
 
 function copyOutput() {
-    const text = document.getElementById('output').textContent;
+    const text = document.getElementById('output').value;
     if (text) {
         navigator.clipboard.writeText(text);
-        alert('Copied to clipboard!');
+        alert('কপি করা হয়েছে!');
     }
 }
 
+// Fixed Search and Replace logic for Textarea Output
 function applyReplace() {
     const findText = document.getElementById('findInput').value;
     const replaceText = document.getElementById('replaceInput').value;
-    const outputDiv = document.getElementById('output');
+    const outputArea = document.getElementById('output');
 
     if (!findText) return;
 
-    let currentContent = outputDiv.textContent;
+    let currentContent = outputArea.value;
     const regex = new RegExp(escapeRegExp(findText), 'g');
-    outputDiv.textContent = currentContent.replace(regex, replaceText);
+    outputArea.value = currentContent.replace(regex, replaceText);
 }
 
 function escapeRegExp(string) {
@@ -42,7 +43,7 @@ function parseFilename(filename, url) {
         return `Multi Server • MultiShows${sizeStr}`;
     }
 
-    // Resolution & Bit
+    // Resolution
     let res = "";
     if (/2160p|4K|UHD/i.test(filename)) res = "2160p";
     else if (/1080p/i.test(filename)) res = "1080p";
@@ -75,7 +76,6 @@ function parseFilename(filename, url) {
     } else if (/HDR/i.test(filename)) {
         hdr = "HDR";
     } else if (res === "2160p" || /SDR/i.test(filename)) {
-        // Fix: Force SDR for 2160p when no HDR/DV is present
         hdr = "SDR";
     }
 
@@ -115,28 +115,19 @@ function processInput() {
     if (!raw) return;
 
     const lines = raw.split('\n').map(l => l.trim()).filter(l => l);
-    
     let entries = [];
     let currentFileName = "";
 
     for (let line of lines) {
         if (line.startsWith('http')) {
-            entries.push({
-                file: currentFileName,
-                url: line
-            });
+            entries.push({ file: currentFileName, url: line });
             currentFileName = ""; 
         } else {
-            if (currentFileName) {
-                currentFileName += " " + line;
-            } else {
-                currentFileName = line;
-            }
+            currentFileName = currentFileName ? currentFileName + " " + line : line;
         }
     }
 
     let isEpisodeSeries = entries.some(e => /S\d{2}E\d{2}/i.test(e.file));
-
     let resultOutput = "";
 
     if (isEpisodeSeries) {
@@ -145,23 +136,18 @@ function processInput() {
         entries.forEach(item => {
             let epMatch = item.file.match(/S\d{2}E\d{2}/i);
             let epKey = epMatch ? epMatch[0].toUpperCase() : "GENERAL";
-            
             if (!epGroups[epKey]) epGroups[epKey] = [];
             epGroups[epKey].push(item);
         });
 
         let epOutputs = [];
-
         for (let epKey in epGroups) {
             let items = epGroups[epKey];
             let firstFile = items[0].file;
-
             let showTitle = firstFile.replace(/\./g, ' ').split(/S\d{2}E\d{2}/i)[0].trim();
             showTitle = showTitle.replace(/Monster/i, "Monster:");
 
-            let epHeader = `${showTitle} - ${epKey}`;
-            
-            let block = `\`${epHeader}\`\n\n\``;
+            let block = `\`${showTitle} -${epKey}\`\n\n\``;
             items.forEach(it => {
                 let label = parseFilename(it.file, it.url);
                 block += `${it.url} "${label}"\n`;
@@ -169,22 +155,13 @@ function processInput() {
             block = block.trim() + '`';
             epOutputs.push(block);
         }
-
         resultOutput = epOutputs.join('\n\n---\n\n');
 
     } else {
         let firstFile = entries[0] ? entries[0].file : "";
         let titleMatch = firstFile.match(/^([A-Za-z0-9.\-\s]+?)\s*\(?(\d{4})\)?/);
-        
-        let title = "";
-        let year = "";
-
-        if (titleMatch) {
-            title = titleMatch[1].replace(/\./g, ' ').trim();
-            year = titleMatch[2];
-        } else {
-            title = firstFile.split('.')[0] || "Title";
-        }
+        let title = titleMatch ? titleMatch[1].replace(/\./g, ' ').trim() : (firstFile.split('.')[0] || "Title");
+        let year = titleMatch ? titleMatch[2] : "";
 
         let headerText = year ? `${title} (${year})` : title;
         resultOutput = `\`${headerText}\`\n\n\``;
@@ -193,14 +170,37 @@ function processInput() {
             let label = parseFilename(item.file, item.url);
             resultOutput += `${item.url} "${label}"\n`;
         });
-
         resultOutput = resultOutput.trim() + '`';
     }
 
     if (entries.length === 0) {
-        warningBox.innerHTML = "⚠️ Sachi URL mali nathi! Input tpaso.";
+        warningBox.innerHTML = "⚠️ কোনো সঠিক URL পাওয়া যায়নি!";
         warningBox.style.display = 'block';
     }
 
-    document.getElementById('output').textContent = resultOutput;
+    document.getElementById('output').value = resultOutput;
+}
+
+/* GDrive Link Extractor Functions */
+function extractGDriveLinks() {
+    const input = document.getElementById('gdriveInput').value;
+    if (!input) return;
+
+    // Regex to match URLs
+    const urlRegex = /(https?:\/\/[^\s]+)/g;
+    const matches = input.match(urlRegex) || [];
+    
+    // Unique URLs
+    const uniqueLinks = [...new Set(matches)];
+
+    if (uniqueLinks.length > 0) {
+        document.getElementById('gdriveOutput').value = uniqueLinks.join('\n');
+    } else {
+        document.getElementById('gdriveOutput').value = "⚠️ কোনো লিঙ্ক খুঁজে পাওয়া যায়নি!";
+    }
+}
+
+function clearGDrive() {
+    document.getElementById('gdriveInput').value = '';
+    document.getElementById('gdriveOutput').value = '';
 }

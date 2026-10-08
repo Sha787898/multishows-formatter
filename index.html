@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MultiShows Advanced Link Formatter</title>
+    <title>MultiShows Advanced Link Formatter Pro</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
@@ -11,40 +11,54 @@
 
 <div class="container">
     <header>
-        <h1>MultiShows Automated Link Formatter</h1>
-        <p>Smart Telegram Link Formatting & Codec Parsing Tool</p>
+        <h1 class="glow-text">MultiShows Automated Link Formatter</h1>
+        <p>Smart Telegram Link Formatting, Codec Parsing & GDrive Link Extractor</p>
     </header>
 
     <div class="grid">
         <!-- Input Card -->
-        <div class="card">
+        <div class="card animated-card">
             <div class="card-header">
                 <span class="card-title">📝 Raw Input Data</span>
             </div>
-            <textarea id="rawInput" placeholder="Raw links and filenames paste karo..."></textarea>
+            <textarea id="rawInput" placeholder="এখানে কাঁচা লিঙ্ক ও ফাইল নেম পেস্ট করুন..."></textarea>
             <div class="btn-group">
-                <button class="btn-primary" onclick="processInput()">⚡ FORMAT LINKS</button>
+                <button class="btn-primary pulse-btn" onclick="processInput()">⚡ FORMAT LINKS</button>
                 <button class="btn-danger" onclick="clearAll()">🗑️ CLEAR</button>
             </div>
             <div id="warningBox" class="warning"></div>
         </div>
 
         <!-- Output Card -->
-        <div class="card">
+        <div class="card animated-card">
             <div class="card-header">
                 <span class="card-title">🚀 Telegram Formatted Output</span>
             </div>
 
             <!-- Search and Replace Section -->
             <div class="search-replace-bar">
-                <input type="text" id="findInput" placeholder="Find text...">
+                <input type="text" id="findInput" placeholder="Find text (e.g. 2160p HEVC)...">
                 <input type="text" id="replaceInput" placeholder="Replace with...">
                 <button class="btn-action" onclick="applyReplace()">Replace All</button>
             </div>
 
-            <div id="output"></div>
-            <button class="btn-copy" onclick="copyOutput()">📋 COPY OUTPUT</button>
+            <textarea id="output" readonly placeholder="এখানে ফরম্যাট হওয়া রেজাল্ট দেখাবে..."></textarea>
+            <button class="btn-copy pulse-btn-green" onclick="copyOutput()">📋 COPY OUTPUT</button>
         </div>
+    </div>
+
+    <!-- Google Drive Folder Link Extractor Section -->
+    <div class="card animated-card gdrive-section">
+        <div class="card-header">
+            <span class="card-title">📁 Google Drive / Folder Link Extractor</span>
+        </div>
+        <p class="section-desc">গুগল ড্রাইভ বা টেক্সটের ভিতর থাকা ফোল্ডার লিংক ও সাব-লিংকগুলোকে আলাদা করতে পেস্ট করুন:</p>
+        <textarea id="gdriveInput" placeholder="Google Drive folder link বা ফাইল সম্বলিত টেক্সট পেস্ট করুন..."></textarea>
+        <div class="btn-group">
+            <button class="btn-primary" onclick="extractGDriveLinks()">🔍 EXTRACT ALL LINKS</button>
+            <button class="btn-danger" onclick="clearGDrive()">🗑️ CLEAR GDRIVE</button>
+        </div>
+        <textarea id="gdriveOutput" readonly placeholder="আলাদা করা লিঙ্কসমূহ এখানে এক্সপোর্ট হবে..."></textarea>
     </div>
 </div>
 

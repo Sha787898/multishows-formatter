@@ -75,7 +75,7 @@ function escapeRegExp(string) {
     return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
-// Extract size string e.g. [6.78 GB] or [16.37 GB]
+// Fixed Extract size string e.g. [20.09 GB] or [10.91 GB]
 function extractSize(text) {
     if (!text) return '';
     const match = text.match(/\[?(\d+(?:\.\d+)?\s*(?:GB\vert{}MB))\]?/i);
@@ -96,19 +96,18 @@ function parseSizeToGB(text) {
 function cleanTitle(filename) {
     if (!filename) return "pack files";
     
-    // Clean string up to Year e.g., Mandaadi.2026.1080p -> Mandaadi
+    // Clean string up to Year e.g., The.Butchers.Blade.2026 -> The Butchers Blade
     let yearMatch = filename.split(/[\s\.\_\-](?:19|20)\d{2}/i)[0];
     if (yearMatch && yearMatch !== filename) {
         return yearMatch.replace(/[\.\_]/g, ' ').trim();
     }
     
-    // Clean string up to Season Tag e.g., Carrie.S01E08 -> Carrie
+    // Clean string up to Season Tag e.g., Show.Name.S01E08 -> Show Name
     let seasonMatch = filename.split(/S\d{2}/i)[0];
     if (seasonMatch && seasonMatch !== filename) {
         return seasonMatch.replace(/[\.\_]/g, ' ').trim();
     }
 
-    // Fallback: take first word before first dot or space
     return filename.split(/[\.\s\_]/)[0].trim();
 }
 

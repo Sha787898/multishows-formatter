@@ -1,14 +1,12 @@
-// Background Red Particle Animation
+// Smooth Subtle Background Particles
 const canvas = document.getElementById('bgCanvas');
 const ctx = canvas.getContext('2d');
-
 let particles = [];
 
 function resizeCanvas() {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
 }
-
 window.addEventListener('resize', resizeCanvas);
 resizeCanvas();
 
@@ -16,10 +14,10 @@ class Particle {
     constructor() {
         this.x = Math.random() * canvas.width;
         this.y = Math.random() * canvas.height;
-        this.size = Math.random() * 2 + 0.5;
-        this.speedX = (Math.random() - 0.5) * 0.5;
-        this.speedY = (Math.random() - 0.5) * 0.5;
-        this.alpha = Math.random() * 0.5 + 0.1;
+        this.size = Math.random() * 1.8 + 0.5;
+        this.speedX = (Math.random() - 0.5) * 0.3;
+        this.speedY = (Math.random() - 0.5) * 0.3;
+        this.alpha = Math.random() * 0.4 + 0.1;
     }
     update() {
         this.x += this.speedX;
@@ -35,21 +33,18 @@ class Particle {
     }
 }
 
-for (let i = 0; i < 60; i++) {
+for (let i = 0; i < 45; i++) {
     particles.push(new Particle());
 }
 
 function animateParticles() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    particles.forEach(p => {
-        p.update();
-        p.draw();
-    });
+    particles.forEach(p => { p.update(); p.draw(); });
     requestAnimationFrame(animateParticles);
 }
 animateParticles();
 
-/* Formatter & Extractor Logic */
+/* Action Handler Logic */
 function clearAll() {
     document.getElementById('rawInput').value = '';
     document.getElementById('output').value = '';
@@ -62,7 +57,7 @@ function copyOutput() {
     const text = document.getElementById('output').value;
     if (text) {
         navigator.clipboard.writeText(text);
-        alert('Copied to clipboard successfully!');
+        alert('Output copied to clipboard!');
     }
 }
 
@@ -72,25 +67,33 @@ function applyReplace() {
     const outputArea = document.getElementById('output');
 
     if (!findText) return;
-
-    let currentContent = outputArea.value;
     const regex = new RegExp(escapeRegExp(findText), 'g');
-    outputArea.value = currentContent.replace(regex, replaceText);
+    outputArea.value = outputArea.value.replace(regex, replaceText);
 }
 
 function escapeRegExp(string) {
     return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
+// Extract size string e.g. [1.85 GB]
 function extractSize(text) {
     const match = text.match(/[\[\(](\d+(?:\.\d+)?\s*(?:GB\vert{}MB))[\]\)]/i);
-    return match ? ` [${match[1]}]` : '';
+    return match ? ` [${match[1].toUpperCase()}]` : '';
+}
+
+// Helper to calculate numerical value in GB
+function parseSizeToGB(text) {
+    const match = text.match(/(\d+(?:\.\d+)?)\s*(GB|MB)/i);
+    if (!match) return 0;
+    let val = parseFloat(match[1]);
+    let unit = match[2].toUpperCase();
+    return unit === 'MB' ? val / 1024 : val;
 }
 
 function parseFilename(filename, url) {
     const sizeStr = extractSize(filename);
 
-    if (url.includes('short.azonahub') || url.includes('filesforever') || url.includes('gdmirrorbot') || url.includes('embed')) {
+    if (url.includes('short.azonahub') || url.includes('filesforever') || url.includes('embed')) {
         return `Multi Server • MultiShows${sizeStr}`;
     }
 
@@ -114,55 +117,35 @@ function parseFilename(filename, url) {
         codec = "AVC (x264)";
     } else if (/H\.?264|AVC/i.test(filename)) {
         codec = "AVC (H.264)";
+    } else {
+        codec = "AVC (H.264)"; // Default fallback to AVC if missing
     }
 
-    // HDR / DoVi / SDR
+    // HDR/SDR
     let hdr = "";
-    if (/DV|DoVi|HDR-DV/i.test(filename)) {
-        hdr = "DoVi HDR";
-        if (/HDR10\+/i.test(filename)) hdr = "DoVi HDR10+";
-        else if (/HDR10/i.test(filename)) hdr = "DoVi HDR10";
-    } else if (/HDR10\+/i.test(filename)) {
-        hdr = "HDR10+";
-    } else if (/HDR/i.test(filename)) {
-        hdr = "HDR";
-    } else if (res === "2160p" || /SDR/i.test(filename)) {
-        hdr = "SDR";
-    }
+    if (/DV|DoVi|HDR-DV/i.test(filename)) hdr = "DoVi HDR";
+    else if (/HDR10\+/i.test(filename)) hdr = "HDR10+";
+    else if (/HDR/i.test(filename)) hdr = "HDR";
+    else if (res === "2160p" || /SDR/i.test(filename)) hdr = "SDR";
 
     // Source Tag
     let source = "";
-    if (/REMUX/i.test(filename)) {
-        source = /UHD/i.test(filename) ? "BluRay • REMUX UHD" : "BluRay • REMUX";
-    } else if (/Hybrid/i.test(filename)) {
-        source = "Hybrid MA";
-    } else if (/UHD.*BluRay|BluRay.*UHD/i.test(filename)) {
-        source = "UHD BluRay";
-    } else if (/BluRay/i.test(filename)) {
-        source = "BluRay";
-    } else if (/AMZN/i.test(filename)) {
-        source = "AMZN";
-    } else if (/\bNF\b/i.test(filename)) {
-        source = "NF";
-    } else if (/\bMA\b/i.test(filename)) {
-        source = "MA";
-    }
+    if (/REMUX/i.test(filename)) source = "BluRay • REMUX";
+    else if (/BluRay/i.test(filename)) source = "BluRay";
+    else if (/AMZN/i.test(filename)) source = "AMZN";
+    else if (/NF/i.test(filename)) source = "NF";
+    else if (/ZEE5/i.test(filename)) source = "ZEE5";
+    else if (/DSNP|Hotstar/i.test(filename)) source = "DSNP";
+    else source = "AMZN";
 
-    // Pack File Support Detection
+    // Pack Checking
     let isPack = /pack/i.test(filename) || /pack/i.test(url);
     if (isPack) {
-        if (source) {
-            source += " [PACK]";
-        } else {
-            source = "SOURCE [PACK]";
-        }
+        source = `${source} [PACK]`;
     }
 
     let resBitHdrCodec = [res, bit, hdr, codec].filter(Boolean).join(" ");
-    let finalLabel = resBitHdrCodec;
-    if (source) {
-        finalLabel += ` • ${source}`;
-    }
+    let finalLabel = resBitHdrCodec ? `${resBitHdrCodec} • ${source}` : source;
 
     return `${finalLabel}${sizeStr}`.replace(/\s+/g, ' ').trim();
 }
@@ -171,25 +154,32 @@ function processInput() {
     const raw = document.getElementById('rawInput').value.trim();
     const warningBox = document.getElementById('warningBox');
     warningBox.style.display = 'none';
-    warningBox.innerHTML = '';
 
     if (!raw) return;
 
     const lines = raw.split('\n').map(l => l.trim()).filter(l => l);
     let entries = [];
-    let currentFileName = "";
+    let currentText = "";
 
     for (let line of lines) {
         if (line.startsWith('http')) {
-            entries.push({ file: currentFileName, url: line });
-            currentFileName = ""; 
+            entries.push({ file: currentText, url: line });
+            currentText = "";
         } else {
-            currentFileName = currentFileName ? currentFileName + " " + line : line;
+            currentText = currentText ? currentText + " " + line : line;
         }
     }
 
     let isEpisodeSeries = entries.some(e => /S\d{2}E\d{2}/i.test(e.file));
     let resultOutput = "";
+
+    // Total size calculation for AVC files
+    let totalAvcSizeGB = 0;
+    entries.forEach(item => {
+        if (/AVC|H\.?264|x264/i.test(item.file) || !(/HEVC|H\.?265|x265|AV1/i.test(item.file))) {
+            totalAvcSizeGB += parseSizeToGB(item.file);
+        }
+    });
 
     if (isEpisodeSeries) {
         let epGroups = {};
@@ -206,7 +196,6 @@ function processInput() {
             let items = epGroups[epKey];
             let firstFile = items[0].file;
             let showTitle = firstFile.replace(/\./g, ' ').split(/S\d{2}E\d{2}/i)[0].trim();
-            showTitle = showTitle.replace(/Monster/i, "Monster:");
 
             let block = `\`${showTitle} -${epKey}\`\n\n\``;
             items.forEach(it => {
@@ -220,12 +209,10 @@ function processInput() {
 
     } else {
         let firstFile = entries[0] ? entries[0].file : "";
-        let titleMatch = firstFile.match(/^([A-Za-z0-9.\-\s]+?)\s*\(?(\d{4})\)?/);
-        let title = titleMatch ? titleMatch[1].replace(/\./g, ' ').trim() : (firstFile.split('.')[0] || "pack files");
-        let year = titleMatch ? titleMatch[2] : "";
+        let title = firstFile.split('.')[0] || "pack files";
 
-        let headerText = year ? `${title} (${year})` : title;
-        resultOutput = `\`${headerText} - GENERAL\`\n\n\``;
+        let totalSizeNotice = totalAvcSizeGB > 0 ? ` [Total AVC: ${totalAvcSizeGB.toFixed(2)} GB]` : '';
+        resultOutput = `\`pack files - GENERAL${totalSizeNotice}\`\n\n\``;
 
         entries.forEach(item => {
             let label = parseFilename(item.file, item.url);
@@ -235,66 +222,50 @@ function processInput() {
     }
 
     if (entries.length === 0) {
-        warningBox.innerHTML = "⚠️ No valid URLs found! Check your input syntax.";
+        warningBox.innerHTML = "⚠️ No valid links found in input!";
         warningBox.style.display = 'block';
     }
 
     document.getElementById('output').value = resultOutput;
 }
 
-/* Smart GDrive Folder & Sub-Folder Extractor Logic */
+/* Google Drive Link Separator */
 function extractGDriveLinks() {
     const input = document.getElementById('gdriveInput').value.trim();
     const outputArea = document.getElementById('gdriveOutput');
 
     if (!input) return;
 
-    // Pattern matching all GDrive folders and file URLs
     const gdriveFolderRegex = /(https?:\/\/drive\.google\.com\/(?:drive\/folders\/|folderview\?id=)[a-zA-Z0-9_-]+[^\s]*)/gi;
     const allUrlRegex = /(https?:\/\/[^\s]+)/gi;
 
     let folderMatches = input.match(gdriveFolderRegex) || [];
     let allMatches = input.match(allUrlRegex) || [];
 
-    // Filter unique
     let uniqueFolders = [...new Set(folderMatches)];
     let uniqueAll = [...new Set(allMatches)];
 
-    let extractedList = [];
-
+    let result = [];
     if (uniqueFolders.length > 0) {
-        uniqueFolders.forEach((folderUrl, idx) => {
-            extractedList.push(`Folder Link ${idx + 1}:\n${folderUrl}`);
+        uniqueFolders.forEach((folder, idx) => {
+            result.push(`Folder Link ${idx + 1}:\n${folder}`);
         });
     }
 
-    // Add remaining file links
     uniqueAll.forEach(link => {
-        if (!gdriveFolderRegex.test(link) && !extractedList.includes(link)) {
-            extractedList.push(link);
+        if (!gdriveFolderRegex.test(link) && !result.includes(link)) {
+            result.push(link);
         }
     });
 
-    if (extractedList.length > 0) {
-        outputArea.value = extractedList.join('\n\n');
-    } else {
-        outputArea.value = "⚠️ No valid links or folders found in the input!";
-    }
+    outputArea.value = result.length ? result.join('\n\n') : "⚠️ No Google Drive links found!";
 }
 
 function sendToRawInput() {
-    const extractedData = document.getElementById('gdriveOutput').value;
-    if (extractedData) {
-        document.getElementById('rawInput').value = extractedData;
+    const data = document.getElementById('gdriveOutput').value;
+    if (data) {
+        document.getElementById('rawInput').value = data;
         window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-}
-
-function sendBackToGDriveInput() {
-    const extractedData = document.getElementById('gdriveOutput').value;
-    if (extractedData) {
-        document.getElementById('gdriveInput').value = extractedData;
-        document.getElementById('gdriveOutput').value = '';
     }
 }
 

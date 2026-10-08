@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MultiShows - Media Link Formatter</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1 class="glow-text">MULTISHOWS</h1>
+            <p class="subtitle">AUTOMATED LINK FORMATTER CORE v1.0</p>
+        </header>
+
+        <main class="grid-container">
+            <div class="card input-card">
+                <h2>Raw Links Input</h2>
+                <textarea id="rawInput" placeholder="Paste your raw text and links here..."></textarea>
+                <div class="btn-group">
+                    <button id="formatBtn" class="cyber-btn">FORMAT LINKS</button>
+                    <button id="clearBtn" class="cyber-btn secondary">CLEAR</button>
+                </div>
+            </div>
+
+            <div class="card output-card">
+                <h2>Telegram Formatted Output</h2>
+                <div id="outputContainer" class="output-box"></div>
+                <button id="copyBtn" class="cyber-btn success">COPY FOR TELEGRAM</button>
+            </div>
+        </main>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

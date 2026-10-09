@@ -92,7 +92,7 @@ function parseSizeToGB(text) {
     return unit === 'MB' ? val / 1024 : val;
 }
 
-// Clean Title & Auto-append Year e.g., Insidious - Out of the Further (2026)
+// Clean Title & Auto-append Year
 function cleanTitle(filename) {
     if (!filename) return "pack files";
 
@@ -102,7 +102,7 @@ function cleanTitle(filename) {
     let titlePart = filename;
     if (yearMatch) {
         titlePart = filename.split(/(?:19|20)\d{2}/i)[0];
-    } else {
+    } else if (/S\d{2}/i.test(filename)) {
         titlePart = filename.split(/S\d{2}/i)[0];
     }
 
@@ -112,7 +112,7 @@ function cleanTitle(filename) {
         .replace(/[\-\(\)\[\]]+$/, '')
         .trim();
 
-    if (!cleanName) cleanName = "Movie";
+    if (!cleanName) cleanName = "Show";
 
     return `${cleanName}${yearStr}`;
 }
@@ -258,27 +258,36 @@ function processInput() {
         }
     });
 
-    let isEpisodeSeries = entries.some(e => /S\d{2}E\d{2}/i.test(e.file));
+    let isEpisodeSeries = entries.some(e => /S\d{2}E\d{2}|S\d{2}|E\d{2}/i.test(e.file));
     let resultOutput = "";
 
     if (isEpisodeSeries) {
         let epGroups = {};
 
         entries.forEach(item => {
-            let epMatch = item.file.match(/S\d{2}E\d{2}/i);
+            let epMatch = item.file.match(/S\d{2}E\d{2}|S\d{2}/i);
             let epKey = epMatch ? epMatch[0].toUpperCase() : "GENERAL";
-            if (!epGroups[epKey]) epGroups[epKey] = [];
-            epGroups[epKey].push(item);
+            let showTitle = cleanTitle(item.file);
+
+            // UNIQUE KEY FIX: Prevents different shows with same Episode S01E12 from merging!
+            let uniqueKey = `${showTitle.toLowerCase()}___${epKey}`;
+
+            if (!epGroups[uniqueKey]) {
+                epGroups[uniqueKey] = {
+                    title: showTitle,
+                    epKey: epKey,
+                    items: []
+                };
+            }
+            epGroups[uniqueKey].items.push(item);
         });
 
         let epOutputs = [];
-        for (let epKey in epGroups) {
-            let items = epGroups[epKey];
-            let firstFile = items[0].file;
-            let showTitle = cleanTitle(firstFile);
+        for (let groupKey in epGroups) {
+            let group = epGroups[groupKey];
 
-            let block = `\`${showTitle} -${epKey}\`\n\n\``;
-            items.forEach(it => {
+            let block = `\`${group.title} -${group.epKey}\`\n\n\``;
+            group.items.forEach(it => {
                 let label = parseFilename(it.file, it.url, totalAvcSizeGB);
                 block += `${it.url} "${label}"\n`;
             });

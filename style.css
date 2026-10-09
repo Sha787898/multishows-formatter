@@ -15,8 +15,8 @@
 
 /* Custom Scrollbars */
 ::-webkit-scrollbar {
-    width: 7px;
-    height: 7px;
+    width: 6px;
+    height: 6px;
 }
 
 ::-webkit-scrollbar-track {
@@ -96,12 +96,6 @@ header p {
     gap: 20px;
 }
 
-@media (max-width: 900px) {
-    .grid, .grid-gdrive {
-        grid-template-columns: 1fr !important;
-    }
-}
-
 .card {
     background: var(--card-bg);
     backdrop-filter: blur(15px);
@@ -109,7 +103,6 @@ header p {
     border-radius: 16px;
     padding: 20px;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
-    /* Subtle Hover Transition */
     transition: border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
@@ -221,6 +214,7 @@ button {
     transition: opacity 0.2s ease;
     display: inline-flex;
     align-items: center;
+    justify-content: center;
     gap: 6px;
 }
 
@@ -268,4 +262,48 @@ button:hover {
     margin-top: 10px;
     display: none;
     font-size: 0.82rem;
+}
+
+/* Fully Mobile Responsive Layout */
+@media (max-width: 900px) {
+    body {
+        padding: 15px 10px;
+    }
+
+    .glow-text {
+        font-size: 1.5rem;
+    }
+
+    header p {
+        font-size: 0.78rem;
+    }
+
+    .grid, .grid-gdrive {
+        grid-template-columns: 1fr !important;
+        gap: 15px;
+    }
+
+    .search-replace-bar {
+        flex-direction: column;
+    }
+
+    .search-replace-bar input, .search-replace-bar button {
+        width: 100%;
+    }
+
+    .btn-group {
+        flex-direction: column;
+    }
+
+    .btn-group button {
+        width: 100%;
+    }
+
+    textarea {
+        height: 260px;
+    }
+
+    .card {
+        padding: 15px;
+    }
 }

@@ -105,18 +105,24 @@ function parseSizeToGB(text) {
     return unit === 'MB' ? val / 1024 : val;
 }
 
-// Clean Title & Auto-append Year
+// Robust Clean Title Logic: Strips "My Files:", Timestamps, and handles Year
 function cleanTitle(filename) {
-    if (!filename) return "pack files";
+    if (!filename) return { baseName: "pack files", displayName: "pack files", year: null };
 
-    const yearMatch = filename.match(/(?:19|20)\d{2}/);
+    // Remove "My Files:" prefix and any timestamp logs like [10/8/2026 ...]
+    let clean = filename
+        .replace(/^.*?My Files:\s*/i, '')
+        .replace(/^\[.*?\]\s*/i, '')
+        .trim();
+
+    const yearMatch = clean.match(/(?:19|20)\d{2}/);
     let yearStr = yearMatch ? ` (${yearMatch[0]})` : "";
 
-    let titlePart = filename;
+    let titlePart = clean;
     if (yearMatch) {
-        titlePart = filename.split(/(?:19|20)\d{2}/i)[0];
-    } else if (/S\d{2}/i.test(filename)) {
-        titlePart = filename.split(/S\d{2}/i)[0];
+        titlePart = clean.split(/(?:19|20)\d{2}/i)[0];
+    } else if (/S\d{2}/i.test(clean)) {
+        titlePart = clean.split(/S\d{2}/i)[0];
     }
 
     let cleanName = titlePart
@@ -127,7 +133,11 @@ function cleanTitle(filename) {
 
     if (!cleanName) cleanName = "Show";
 
-    return `${cleanName}${yearStr}`;
+    return {
+        baseName: cleanName.toLowerCase(),
+        displayName: `${cleanName}${yearStr}`,
+        year: yearMatch ? yearMatch[0] : null
+    };
 }
 
 function parseFilename(filename, url, totalAvcPackSizeGB = 0) {
@@ -280,16 +290,24 @@ function processInput() {
         entries.forEach(item => {
             let epMatch = item.file.match(/S\d{2}E\d{2}|S\d{2}/i);
             let epKey = epMatch ? epMatch[0].toUpperCase() : "GENERAL";
-            let showTitle = cleanTitle(item.file);
+            let titleObj = cleanTitle(item.file);
 
-            let uniqueKey = `${showTitle.toLowerCase()}___${epKey}`;
+            // Normalized Base Key ensures "Take Charge of My Heart" & "Take Charge of My Heart (2026)" merge into ONE block!
+            let uniqueKey = `${titleObj.baseName}___${epKey}`;
 
             if (!epGroups[uniqueKey]) {
                 epGroups[uniqueKey] = {
-                    title: showTitle,
+                    title: titleObj.displayName,
+                    hasYear: !!titleObj.year,
                     epKey: epKey,
                     items: []
                 };
+            } else {
+                // If year is found in any entry, ensure output header gets the year
+                if (!epGroups[uniqueKey].hasYear && titleObj.year) {
+                    epGroups[uniqueKey].title = titleObj.displayName;
+                    epGroups[uniqueKey].hasYear = true;
+                }
             }
             epGroups[uniqueKey].items.push(item);
         });
@@ -309,8 +327,8 @@ function processInput() {
         resultOutput = epOutputs.join('\n\n---\n\n');
 
     } else {
-        let mainTitle = entries.length > 0 ? cleanTitle(entries[0].file) : "pack files";
-        resultOutput = `\`${mainTitle} -GENERAL\`\n\n\``;
+        let mainTitleObj = entries.length > 0 ? cleanTitle(entries[0].file) : { displayName: "pack files" };
+        resultOutput = `\`${mainTitleObj.displayName} -GENERAL\`\n\n\``;
 
         entries.forEach(item => {
             let label = parseFilename(item.file, item.url, totalAvcSizeGB);

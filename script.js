@@ -53,11 +53,24 @@ function clearAll() {
     document.getElementById('warningBox').style.display = 'none';
 }
 
+// Clean Copy Handler without annoying browser popup
 function copyOutput() {
     const text = document.getElementById('output').value;
+    const copyBtn = document.querySelector('.btn-copy');
+
     if (text) {
         navigator.clipboard.writeText(text);
-        alert('Output copied to clipboard!');
+
+        if (copyBtn) {
+            const originalText = copyBtn.innerHTML;
+            copyBtn.innerHTML = '✅ COPIED TO CLIPBOARD!';
+            copyBtn.style.background = 'linear-gradient(135deg, #15803d 0%, #166534 100%)';
+
+            setTimeout(() => {
+                copyBtn.innerHTML = originalText;
+                copyBtn.style.background = '';
+            }, 2000);
+        }
     }
 }
 
@@ -269,7 +282,6 @@ function processInput() {
             let epKey = epMatch ? epMatch[0].toUpperCase() : "GENERAL";
             let showTitle = cleanTitle(item.file);
 
-            // UNIQUE KEY FIX: Prevents different shows with same Episode S01E12 from merging!
             let uniqueKey = `${showTitle.toLowerCase()}___${epKey}`;
 
             if (!epGroups[uniqueKey]) {

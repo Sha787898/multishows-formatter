@@ -105,11 +105,10 @@ function parseSizeToGB(text) {
     return unit === 'MB' ? val / 1024 : val;
 }
 
-// Robust Clean Title Logic: Strips "My Files:", Timestamps, and handles Year
+// Robust Clean Title Logic with strict punctuation-agnostic baseName grouping
 function cleanTitle(filename) {
     if (!filename) return { baseName: "pack files", displayName: "pack files", year: null };
 
-    // Remove "My Files:" prefix and any timestamp logs like [10/8/2026 ...]
     let clean = filename
         .replace(/^.*?My Files:\s*/i, '')
         .replace(/^\[.*?\]\s*/i, '')
@@ -127,14 +126,17 @@ function cleanTitle(filename) {
 
     let cleanName = titlePart
         .split(/AKA/i)[0]
-        .replace(/[\.\_]/g, ' ')
-        .replace(/[\-\(\)\[\]]+$/, '')
+        .replace(/[\.\_\,\-\(\)\[\]]+/g, ' ')
+        .replace(/\s+/g, ' ')
         .trim();
 
     if (!cleanName) cleanName = "Show";
 
+    // Strictly normalized baseName (removes all spaces and punctuation) so minor comma/hyphen differences merge successfully
+    let baseName = cleanName.toLowerCase().replace(/[^a-z0-9]/g, '');
+
     return {
-        baseName: cleanName.toLowerCase(),
+        baseName: baseName,
         displayName: `${cleanName}${yearStr}`,
         year: yearMatch ? yearMatch[0] : null
     };
@@ -292,7 +294,6 @@ function processInput() {
             let epKey = epMatch ? epMatch[0].toUpperCase() : "GENERAL";
             let titleObj = cleanTitle(item.file);
 
-            // Normalized Base Key ensures "Take Charge of My Heart" & "Take Charge of My Heart (2026)" merge into ONE block!
             let uniqueKey = `${titleObj.baseName}___${epKey}`;
 
             if (!epGroups[uniqueKey]) {
@@ -303,7 +304,6 @@ function processInput() {
                     items: []
                 };
             } else {
-                // If year is found in any entry, ensure output header gets the year
                 if (!epGroups[uniqueKey].hasYear && titleObj.year) {
                     epGroups[uniqueKey].title = titleObj.displayName;
                     epGroups[uniqueKey].hasYear = true;

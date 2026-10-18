@@ -105,7 +105,7 @@ function parseSizeToGB(text) {
     return unit === 'MB' ? val / 1024 : val;
 }
 
-// Robust Clean Title Logic with strict punctuation-agnostic baseName grouping
+// Robust Clean Title Logic with Smart Prefix Extraction
 function cleanTitle(filename) {
     if (!filename) return { baseName: "pack files", displayName: "pack files", year: null };
 
@@ -132,12 +132,12 @@ function cleanTitle(filename) {
 
     if (!cleanName) cleanName = "Show";
 
-    // Strictly normalized baseName (removes all spaces and punctuation) so minor comma/hyphen differences merge successfully
     let baseName = cleanName.toLowerCase().replace(/[^a-z0-9]/g, '');
 
     return {
         baseName: baseName,
         displayName: `${cleanName}${yearStr}`,
+        rawCleanName: cleanName,
         year: yearMatch ? yearMatch[0] : null
     };
 }
@@ -294,22 +294,35 @@ function processInput() {
             let epKey = epMatch ? epMatch[0].toUpperCase() : "GENERAL";
             let titleObj = cleanTitle(item.file);
 
-            let uniqueKey = `${titleObj.baseName}___${epKey}`;
+            // Smart Prefix Matching: Checks if an existing group starts with or is contained in this title
+            let matchedKey = null;
+            for (let existingKey in epGroups) {
+                let [exBase, exEp] = existingKey.split('___');
+                if (exEp === epKey) {
+                    if (exBase.startsWith(titleObj.baseName) || titleObj.baseName.startsWith(exBase)) {
+                        matchedKey = existingKey;
+                        break;
+                    }
+                }
+            }
 
-            if (!epGroups[uniqueKey]) {
-                epGroups[uniqueKey] = {
+            let targetKey = matchedKey || `${titleObj.baseName}___${epKey}`;
+
+            if (!epGroups[targetKey]) {
+                epGroups[targetKey] = {
                     title: titleObj.displayName,
+                    baseName: titleObj.baseName,
                     hasYear: !!titleObj.year,
                     epKey: epKey,
                     items: []
                 };
             } else {
-                if (!epGroups[uniqueKey].hasYear && titleObj.year) {
-                    epGroups[uniqueKey].title = titleObj.displayName;
-                    epGroups[uniqueKey].hasYear = true;
+                // Keep the shorter/cleaner display name if a shorter valid title is found
+                if (titleObj.displayName.length < epGroups[targetKey].title.length) {
+                    epGroups[targetKey].title = titleObj.displayName;
                 }
             }
-            epGroups[uniqueKey].items.push(item);
+            epGroups[targetKey].items.push(item);
         });
 
         let epOutputs = [];

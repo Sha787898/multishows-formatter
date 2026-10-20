@@ -120,8 +120,8 @@ function cleanTitle(filename) {
     let titlePart = clean;
     if (yearMatch) {
         titlePart = clean.split(/(?:19|20)\d{2}/i)[0];
-    } else if (/S\d{2}/i.test(clean)) {
-        titlePart = clean.split(/S\d{2}/i)[0];
+    } else if (/S\d{2}E\d{2}|S\d{2}|\bE\d{3}\b/i.test(clean)) {
+        titlePart = clean.split(/S\d{2}E\d{2}|S\d{2}|\bE\d{3}\b/i)[0];
     }
 
     let cleanName = titlePart
@@ -283,18 +283,18 @@ function processInput() {
         }
     });
 
-    let isEpisodeSeries = entries.some(e => /S\d{2}E\d{2}|S\d{2}|E\d{2}/i.test(e.file));
+    let isEpisodeSeries = entries.some(e => /S\d{2}E\d{2}|S\d{2}|E\d{3}|\bE\d{2}\b/i.test(e.file));
     let resultOutput = "";
 
     if (isEpisodeSeries) {
         let epGroups = {};
 
         entries.forEach(item => {
-            let epMatch = item.file.match(/S\d{2}E\d{2}|S\d{2}/i);
+            // Match S01E01 or E361 format episode tags
+            let epMatch = item.file.match(/S\d{2}E\d{2}|S\d{2}|\bE\d{3}\b/i);
             let epKey = epMatch ? epMatch[0].toUpperCase() : "GENERAL";
             let titleObj = cleanTitle(item.file);
 
-            // Smart Prefix Matching: Checks if an existing group starts with or is contained in this title
             let matchedKey = null;
             for (let existingKey in epGroups) {
                 let [exBase, exEp] = existingKey.split('___');
@@ -317,7 +317,6 @@ function processInput() {
                     items: []
                 };
             } else {
-                // Keep the shorter/cleaner display name if a shorter valid title is found
                 if (titleObj.displayName.length < epGroups[targetKey].title.length) {
                     epGroups[targetKey].title = titleObj.displayName;
                 }

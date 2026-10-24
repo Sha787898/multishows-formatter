@@ -157,6 +157,7 @@ function parseFilename(filename, url, totalAvcPackSizeGB = 0) {
     else res = "1080p";
 
     let bit = /10bit/i.test(filename) ? "10bit" : "";
+    let hqTag = /\[HQ\]|\bHQ\b/i.test(filename) ? "HQ" : "";
 
     // Codec Detection
     let codec = "";
@@ -237,7 +238,7 @@ function parseFilename(filename, url, totalAvcPackSizeGB = 0) {
         source = "AMZN";
     }
 
-    let resBitHdrCodec = [res, bit, hdr, codec].filter(Boolean).join(" ");
+    let resBitHdrCodec = [res, bit, hqTag, hdr, codec].filter(Boolean).join(" ");
 
     // PACK File Logic
     let isPack = /pack/i.test(filename) || /pack/i.test(url);

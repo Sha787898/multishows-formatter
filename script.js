@@ -105,6 +105,34 @@ function parseSizeToGB(text) {
     return unit === 'MB' ? val / 1024 : val;
 }
 
+// Extract Episode Number cleanly (supports E361, E-361, or standalone 361/365 if part of episode pattern)
+function extractEpisodeKey(filename) {
+    if (!filename) return "GENERAL";
+    // Match S01E01, E361, or standalone episode numbers like " - 365 -" or " Shippuden - 365 "
+    let match = filename.match(/S\d{2}E\d{2}|S\d{2}|E[\s\-]?\d{2,4}|\b(?:E)\d{2,4}\b/i);
+    if (match) {
+        let cleanEp = match[0].toUpperCase().replace(/[^A-Z0-9]/g, '');
+        if (!cleanEp.startsWith('E') && !cleanEp.startsWith('S')) {
+            cleanEp = 'E' + cleanEp;
+        } else if (cleanEp.startsWith('S') && !cleanEp.includes('E')) {
+            // keeping season if needed
+        } else {
+            cleanEp = 'E' + cleanEp.replace(/[^0-9]/g, '');
+        }
+        return cleanEp;
+    }
+    
+    // Fallback search for numbers following show name/hyphen that look like episode numbers (e.g. Naruto Shippuden - 365 -)
+    let altMatch = filename.match(/(?:[-–—]|\b)\s*([0-9]{2,4})\s+(?:[-–—]|\b[A-Za-z])/);
+    if (altMatch && parseInt(altMatch[1]) > 1900 && parseInt(altMatch[1]) < 2100) {
+        // It's a year, ignore
+    } else if (altMatch) {
+        return 'E' + altMatch[1];
+    }
+
+    return "GENERAL";
+}
+
 // Clean Title Logic
 function cleanTitle(filename) {
     if (!filename) return { baseName: "pack files", displayName: "pack files", year: null };
@@ -120,8 +148,9 @@ function cleanTitle(filename) {
     let titlePart = clean;
     if (yearMatch) {
         titlePart = clean.split(/(?:19|20)\d{2}/i)[0];
-    } else if (/S\d{2}E\d{2}|S\d{2}|E\d{3}|\bE\d{2,3}\b/i.test(clean)) {
-        titlePart = clean.split(/S\d{2}E\d{2}|S\d{2}|E\d{3}|\bE\d{2,3}\b/i)[0];
+    } else {
+        // Split before episode tags
+        titlePart = clean.split(/S\d{2}E\d{2}|S\d{2}|E\d{3}|\bE\d{2,3}\b|\s+-\s+\d{2,4}\s+-/i)[0];
     }
 
     let cleanName = titlePart
@@ -286,15 +315,14 @@ function processInput() {
         }
     });
 
-    let isEpisodeSeries = entries.some(e => /S\d{2}E\d{2}|S\d{2}|E\d{3}|\bE\d{2,3}\b/i.test(e.file));
+    let isEpisodeSeries = entries.some(e => extractEpisodeKey(e.file) !== "GENERAL");
     let resultOutput = "";
 
     if (isEpisodeSeries) {
         let epGroups = {};
 
         entries.forEach(item => {
-            let epMatch = item.file.match(/S\d{2}E\d{2}|S\d{2}|E\d{3}|\bE\d{2,3}\b/i);
-            let epKey = epMatch ? epMatch[0].toUpperCase() : "GENERAL";
+            let epKey = extractEpisodeKey(item.file);
             let titleObj = cleanTitle(item.file);
 
             let matchedKey = null;

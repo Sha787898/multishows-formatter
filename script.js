@@ -181,7 +181,7 @@ function parseFilename(filename, url, totalAvcPackSizeGB = 0) {
     else if (/HDR/i.test(filename)) hdr = "HDR";
     else if (res === "2160p" || /SDR/i.test(filename)) hdr = "SDR";
 
-    // Source Tag Detection (BD -> BluRay, AVC -> BluRay/AMZN)
+    // Source Tag Detection
     let source = "";
     if (/REMUX/i.test(filename)) {
         source = "BluRay • REMUX";
@@ -293,12 +293,7 @@ function processInput() {
 
         entries.forEach(item => {
             let epMatch = item.file.match(/S\d{2}E\d{2}|S\d{2}|E\d{3}|\bE\d{2,3}\b/i);
-            let epNum = epMatch ? epMatch[0].toUpperCase() : "GENERAL";
-            
-            // Separate HQ versions into distinct blocks if [HQ] is present in filename
-            let isHQ = /\[HQ\]|\bHQ\b/i.test(item.file);
-            let epKey = isHQ ? `${epNum} [HQ]` : epNum;
-
+            let epKey = epMatch ? epMatch[0].toUpperCase() : "GENERAL";
             let titleObj = cleanTitle(item.file);
 
             let matchedKey = null;

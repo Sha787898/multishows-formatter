@@ -105,7 +105,7 @@ function parseSizeToGB(text) {
     return unit === 'MB' ? val / 1024 : val;
 }
 
-// Robust Clean Title Logic with Smart Prefix Extraction
+// Clean Title Logic
 function cleanTitle(filename) {
     if (!filename) return { baseName: "pack files", displayName: "pack files", year: null };
 
@@ -120,8 +120,8 @@ function cleanTitle(filename) {
     let titlePart = clean;
     if (yearMatch) {
         titlePart = clean.split(/(?:19|20)\d{2}/i)[0];
-    } else if (/S\d{2}E\d{2}|S\d{2}|\bE\d{3}\b/i.test(clean)) {
-        titlePart = clean.split(/S\d{2}E\d{2}|S\d{2}|\bE\d{3}\b/i)[0];
+    } else if (/S\d{2}E\d{2}|S\d{2}|E\d{3}|\bE\d{2,3}\b/i.test(clean)) {
+        titlePart = clean.split(/S\d{2}E\d{2}|S\d{2}|E\d{3}|\bE\d{2,3}\b/i)[0];
     }
 
     let cleanName = titlePart
@@ -146,7 +146,7 @@ function parseFilename(filename, url, totalAvcPackSizeGB = 0) {
     const sizeStr = extractSize(filename);
 
     // Embedded / Shortened Links
-    if (url.includes('short.azonahub') || url.includes('filesforever') || url.includes('embed')) {
+    if (url.includes('short.azonahub') || url.includes('filesforever') || url.includes('toxcloud') || url.includes('embed')) {
         return `Multi Server • MultiShows${sizeStr}`;
     }
 
@@ -168,6 +168,8 @@ function parseFilename(filename, url, totalAvcPackSizeGB = 0) {
         codec = "HEVC (H.265)";
     } else if (/x264/i.test(filename)) {
         codec = "AVC (x264)";
+    } else if (/H\.?264|AVC/i.test(filename)) {
+        codec = "AVC (H.264)";
     } else {
         codec = "AVC (H.264)";
     }
@@ -179,11 +181,11 @@ function parseFilename(filename, url, totalAvcPackSizeGB = 0) {
     else if (/HDR/i.test(filename)) hdr = "HDR";
     else if (res === "2160p" || /SDR/i.test(filename)) hdr = "SDR";
 
-    // Comprehensive OTT & Source Tag Detection
+    // Source Tag Detection (BD -> BluRay, AVC -> BluRay/AMZN)
     let source = "";
     if (/REMUX/i.test(filename)) {
         source = "BluRay • REMUX";
-    } else if (/BluRay|BDRip|BRRip/i.test(filename)) {
+    } else if (/BluRay|BDRip|BRRip|\bBD\b/i.test(filename)) {
         source = "BluRay";
     } else if (/(?:\b|\.)CR(?:UNCHYROLL)?(?:\b|\.)/i.test(filename)) {
         source = "CR";
@@ -283,16 +285,20 @@ function processInput() {
         }
     });
 
-    let isEpisodeSeries = entries.some(e => /S\d{2}E\d{2}|S\d{2}|E\d{3}|\bE\d{2}\b/i.test(e.file));
+    let isEpisodeSeries = entries.some(e => /S\d{2}E\d{2}|S\d{2}|E\d{3}|\bE\d{2,3}\b/i.test(e.file));
     let resultOutput = "";
 
     if (isEpisodeSeries) {
         let epGroups = {};
 
         entries.forEach(item => {
-            // Match S01E01 or E361 format episode tags
-            let epMatch = item.file.match(/S\d{2}E\d{2}|S\d{2}|\bE\d{3}\b/i);
-            let epKey = epMatch ? epMatch[0].toUpperCase() : "GENERAL";
+            let epMatch = item.file.match(/S\d{2}E\d{2}|S\d{2}|E\d{3}|\bE\d{2,3}\b/i);
+            let epNum = epMatch ? epMatch[0].toUpperCase() : "GENERAL";
+            
+            // Separate HQ versions into distinct blocks if [HQ] is present in filename
+            let isHQ = /\[HQ\]|\bHQ\b/i.test(item.file);
+            let epKey = isHQ ? `${epNum} [HQ]` : epNum;
+
             let titleObj = cleanTitle(item.file);
 
             let matchedKey = null;
